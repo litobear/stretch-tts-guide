@@ -1,0 +1,189 @@
+/* --- UI Visual Feedback Animations --- */
+
+/* Page Fade-In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Pulse for active visual state */
+@keyframes softPulse {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(117, 146, 131, 0.2);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(117, 146, 131, 0);
+  }
+  100% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(117, 146, 131, 0);
+  }
+}
+
+.pulse-active {
+  animation: softPulse 2s infinite ease-in-out;
+}
+
+/* --- SVG Character Animations --- */
+
+/* 1. Neck Tilt Animation */
+@keyframes neckTilt {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  75% {
+    transform: rotate(15deg);
+  }
+}
+
+.animate-neck-head {
+  transform-origin: 100px 105px; /* Neck base pivot point */
+  animation: neckTilt 6s ease-in-out infinite;
+}
+
+/* 2. Shoulder Roll Animation */
+@keyframes shoulderRollLeft {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-3px, -5px);
+  }
+  50% {
+    transform: translate(-6px, 0);
+  }
+  75% {
+    transform: translate(-3px, 5px);
+  }
+}
+
+@keyframes shoulderRollRight {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(3px, -5px);
+  }
+  50% {
+    transform: translate(6px, 0);
+  }
+  75% {
+    transform: translate(3px, 5px);
+  }
+}
+
+.animate-shoulder-l {
+  animation: shoulderRollLeft 4s linear infinite;
+}
+
+.animate-shoulder-r {
+  animation: shoulderRollRight 4s linear infinite;
+}
+
+/* 3. Chest Opener Animation (Synced with Breathing) */
+@keyframes chestOpenerLeft {
+  0%, 100% {
+    transform: rotate(0deg) translate(0, 0);
+  }
+  50% {
+    /* Arms open back */
+    transform: rotate(-25deg) translate(-10px, -5px);
+  }
+}
+
+@keyframes chestOpenerRight {
+  0%, 100% {
+    transform: rotate(0deg) translate(0, 0);
+  }
+  50% {
+    /* Arms open back */
+    transform: rotate(25deg) translate(10px, -5px);
+  }
+}
+
+.animate-chest-arm-l {
+  transform-origin: 75px 95px; /* Left shoulder joint */
+  animation: chestOpenerLeft 8s ease-in-out infinite;
+}
+
+.animate-chest-arm-r {
+  transform-origin: 125px 95px; /* Right shoulder joint */
+  animation: chestOpenerRight 8s ease-in-out infinite;
+}
+
+/* 4. Side Body Stretch Animation */
+@keyframes torsoSideStretch {
+  0%, 100% {
+    transform: skewX(0deg) rotate(0deg);
+  }
+  50% {
+    transform: skewX(10deg) rotate(5deg);
+  }
+}
+
+.animate-torso-side {
+  transform-origin: 100px 180px; /* Hips/base pivot */
+  animation: torsoSideStretch 6s ease-in-out infinite;
+}
+
+/* 5. Forward Fold Animation */
+@keyframes spineForwardFold {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(50deg);
+  }
+}
+
+.animate-upper-body-fold {
+  transform-origin: 100px 150px; /* Hips pivot */
+  animation: spineForwardFold 8s ease-in-out infinite;
+}
+
+/* 6. Quad Stretch Animation */
+@keyframes quadLegBend {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-85deg);
+  }
+}
+
+.animate-leg-bend {
+  transform-origin: 110px 160px; /* Knee joint */
+  animation: quadLegBend 6s ease-in-out infinite;
+}
+
+/* Arrow guides pulsating */
+@keyframes arrowPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+}
+
+.animate-arrow-guide {
+  transform-origin: center;
+  animation: arrowPulse 2s ease-in-out infinite;
+}

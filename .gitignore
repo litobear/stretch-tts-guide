@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+
+# OS-specific files
+.DS_Store
+
+# Local IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
