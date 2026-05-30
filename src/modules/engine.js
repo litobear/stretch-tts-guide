@@ -65,7 +65,51 @@ export function getStepIndex() {
 export function startWorkout(routine) {
   stopWorkout();
   
-  currentRoutine = routine;
+  // Flatten routine steps if any steps have a repeat count > 1
+  const flattenedSteps = [];
+  routine.steps.forEach(step => {
+    const repeat = step.repeat || 1;
+    if (repeat <= 1) {
+      flattenedSteps.push({ ...step });
+    } else {
+      for (let i = 1; i <= repeat; i++) {
+        // Create a copy of the step with a repeat suffix
+        const clonedStep = {
+          ...step,
+          id: `${step.id}-rep-${i}`,
+          name: `${step.name} (第 ${i}/${repeat} 組)`,
+          instructions: Array.isArray(step.instructions)
+            ? step.instructions.map(ins => {
+                if (ins.includes(step.name)) {
+                  return ins.replace(step.name, `${step.name} (第 ${i} 組)`);
+                }
+                return ins;
+              })
+            : step.instructions,
+          ttsCues: Array.isArray(step.ttsCues)
+            ? step.ttsCues.map(cue => {
+                if (cue.time === 0) {
+                  let newText = cue.text;
+                  if (newText.includes(step.name)) {
+                    newText = newText.replace(step.name, `${step.name} (第 ${i} 組)`);
+                  } else {
+                    newText = `下一個動作是：${step.name} (第 ${i} 組)。` + newText;
+                  }
+                  return { ...cue, text: newText };
+                }
+                return { ...cue };
+              })
+            : [{ time: 0, text: `下一個動作是：${step.name} (第 ${i} 組)。` }]
+        };
+        flattenedSteps.push(clonedStep);
+      }
+    }
+  });
+
+  currentRoutine = {
+    ...routine,
+    steps: flattenedSteps
+  };
   currentStepIndex = 0;
   totalTimeElapsed = 0;
   

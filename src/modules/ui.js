@@ -107,7 +107,7 @@ function renderRoutinesList() {
     meta.className = 'routine-meta';
     meta.innerHTML = `
       <div class="routine-meta-item">⏱️ ${escapeHTML(routine.durationText || calculateDurationText(routine))}</div>
-      <div class="routine-meta-item">🧘 ${routine.steps.length} 個步驟</div>
+      <div class="routine-meta-item">🧘 ${routine.steps.reduce((sum, s) => sum + (s.repeat || 1), 0)} 個步驟</div>
     `;
     footer.appendChild(meta);
     
@@ -511,6 +511,7 @@ function setupModals() {
         <div class="form-inputs">
           <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
           <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
+          <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
         </div>
         <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);">✖</button>
       `;
@@ -603,6 +604,7 @@ function setupRoutineCreator() {
       <div class="form-inputs">
         <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
         <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
+        <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
       </div>
       <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);">✖</button>
     `;
@@ -636,6 +638,7 @@ function setupRoutineCreator() {
     items.forEach((item, index) => {
       const name = item.querySelector('.stretch-name').value.trim();
       const duration = parseInt(item.querySelector('.stretch-duration').value);
+      const repeat = parseInt(item.querySelector('.stretch-repeat').value || '1');
       const animationType = 'default';
       
       // 自動生成中文說明
@@ -664,6 +667,7 @@ function setupRoutineCreator() {
         id: `step-${index}-${Date.now()}`,
         name,
         duration,
+        repeat,
         animationType,
         instructions,
         ttsCues
@@ -677,9 +681,10 @@ function setupRoutineCreator() {
       id: editingRoutineId || undefined,
       name: routineName,
       description: description,
-      durationText: `${Math.round(steps.reduce((sum, s) => sum + s.duration, 0) / 60 * 10) / 10} 分鐘`,
+      durationText: '',
       steps
     };
+    newRoutine.durationText = calculateDurationText(newRoutine);
     
     stretches.saveCustomRoutine(newRoutine);
     renderRoutinesList();
@@ -714,6 +719,7 @@ function openEditRoutineModal(routine) {
         <div class="form-inputs">
           <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)" value="${escapeHTML(step.name)}">
           <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="${step.duration}">
+          <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="${step.repeat || 1}">
         </div>
         <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);">✖</button>
       `;
@@ -813,8 +819,11 @@ function handleSharedUrlImport() {
 // --- 通用工具常數 ---
 
 function calculateDurationText(routine) {
-  const totalSeconds = routine.steps.reduce((sum, s) => sum + s.duration, 0);
-  const mins = Math.round(totalSeconds / 60 * 10) / 10;
+  const totalSeconds = routine.steps.reduce((sum, s) => sum + s.duration * (s.repeat || 1), 0);
+  const totalReps = routine.steps.reduce((sum, s) => sum + (s.repeat || 1), 0);
+  const totalRestSeconds = totalReps > 1 ? (totalReps - 1) * 8 : 0;
+  const finalSeconds = totalSeconds + totalRestSeconds;
+  const mins = Math.round(finalSeconds / 60 * 10) / 10;
   return `${mins} 分鐘`;
 }
 
