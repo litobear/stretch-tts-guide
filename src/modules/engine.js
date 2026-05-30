@@ -4,6 +4,7 @@ import * as tts from './tts.js';
 export const States = {
   IDLE: 'IDLE',
   PREPARE: 'PREPARE',
+  EXPLANATION: 'EXPLANATION',
   STRETCHING: 'STRETCHING',
   REST: 'REST',
   COMPLETED: 'COMPLETED',
@@ -77,6 +78,8 @@ export function startWorkout(routine) {
     if (bilateral) {
       for (let r = 1; r <= repeat; r++) {
         executions.push({ side: '右側', set: r, totalSets: repeat });
+      }
+      for (let r = 1; r <= repeat; r++) {
         executions.push({ side: '左側', set: r, totalSets: repeat });
       }
     } else {
@@ -89,10 +92,20 @@ export function startWorkout(routine) {
       const setSuffix = exec.totalSets > 1 ? ` (第 ${exec.set}/${exec.totalSets} 組)` : '';
       const sideSuffix = exec.side ? ` (${exec.side})` : '';
 
+      const setSpeech = exec.totalSets > 1 ? `，第 ${exec.set} 組` : '';
+      const ttsName = exec.side
+        ? `${step.name}，${exec.side}${setSpeech}`
+        : `${step.name}${setSpeech}`;
+
       const clonedStep = {
         ...step,
         id: `${step.id}-exec-${idx}-${Date.now()}`,
+        parentId: step.id,
         name: `${step.name}${sideSuffix}${setSuffix}`,
+        ttsName,
+        set: exec.set,
+        totalSets: exec.totalSets,
+        side: exec.side,
         instructions: Array.isArray(step.instructions)
           ? step.instructions.map((ins) => {
               let newIns = ins;
@@ -106,24 +119,16 @@ export function startWorkout(routine) {
           ? step.ttsCues.map((cue) => {
               if (cue.time === 0) {
                 let newText = cue.text;
-                const repText = exec.side
-                  ? exec.totalSets > 1
-                    ? `${step.name}，${exec.side}，第 ${exec.set} 組`
-                    : `${step.name}，${exec.side}`
-                  : exec.totalSets > 1
-                    ? `${step.name}，第 ${exec.set} 組`
-                    : `${step.name}`;
-
                 if (newText.includes(step.name)) {
-                  newText = newText.replace(step.name, repText);
+                  newText = newText.replace(step.name, ttsName);
                 } else {
-                  newText = `下一個動作是：${repText}。` + newText;
+                  newText = `下一個動作是：${ttsName}。` + newText;
                 }
                 return { ...cue, text: newText };
               }
               return { ...cue };
             })
-          : [{ time: 0, text: `下一個動作是：${step.name}${sideSuffix}${setSuffix}。` }],
+          : [{ time: 0, text: `下一個動作是：${ttsName}。` }],
       };
       flattenedSteps.push(clonedStep);
     });
@@ -184,19 +189,30 @@ export function skipNext() {
 
   tts.stopSpeaking();
 
+  const currentStep = getCurrentStep();
+
   if (state === States.PREPARE) {
-    // Skip warm up directly to stretching
+    // Skip initial prepare warmup to first action explanation
+    currentStepIndex = 0;
+    transitionTo(States.EXPLANATION);
+  } else if (state === States.EXPLANATION) {
+    // Skip explanation straight to stretching
     transitionTo(States.STRETCHING);
   } else if (state === States.STRETCHING) {
-    // If there is another step, go to rest, otherwise complete
     if (currentStepIndex < currentRoutine.steps.length - 1) {
-      transitionTo(States.REST);
+      const nextStep = currentRoutine.steps[currentStepIndex + 1];
+      if (nextStep.parentId !== currentStep.parentId) {
+        currentStepIndex++;
+        transitionTo(States.EXPLANATION);
+      } else {
+        currentStepIndex++;
+        transitionTo(States.REST);
+      }
     } else {
       transitionTo(States.COMPLETED);
     }
   } else if (state === States.REST) {
-    // Skip rest directly to next stretch
-    currentStepIndex++;
+    // Skip rest countdown directly to stretching
     transitionTo(States.STRETCHING);
   }
 }
@@ -207,22 +223,47 @@ export function skipPrev() {
 
   tts.stopSpeaking();
 
+  const currentStep = getCurrentStep();
+
   if (state === States.STRETCHING) {
     if (currentStepIndex > 0) {
+      const prevStep = currentRoutine.steps[currentStepIndex - 1];
       currentStepIndex--;
-      transitionTo(States.STRETCHING);
+      if (prevStep.parentId !== currentStep.parentId) {
+        transitionTo(States.EXPLANATION);
+      } else {
+        transitionTo(States.REST);
+      }
     } else {
-      // If at step 0, restart the preparation
       transitionTo(States.PREPARE);
     }
-  } else if (state === States.REST || state === States.PREPARE) {
-    // If in REST, go back to active stretch of the current step
+  } else if (state === States.REST || state === States.EXPLANATION) {
+    // Return to the stretching phase of the current step
     transitionTo(States.STRETCHING);
   }
 }
 
 // Transition state machine
 function transitionTo(newState) {
+  // Identify the step we just completed (before changing state variable)
+  let completedStep = null;
+  if (state === States.STRETCHING) {
+    if (newState === States.REST || newState === States.EXPLANATION) {
+      completedStep = currentRoutine.steps[currentStepIndex - 1];
+    } else if (newState === States.COMPLETED) {
+      completedStep = currentRoutine.steps[currentStepIndex];
+    }
+  }
+
+  // Check if completed step has a relaxation cue at time === duration
+  let relaxationText = '';
+  if (completedStep && Array.isArray(completedStep.ttsCues)) {
+    const endCue = completedStep.ttsCues.find((c) => c.time === completedStep.duration);
+    if (endCue) {
+      relaxationText = endCue.text;
+    }
+  }
+
   state = newState;
   clearInterval(timerInterval);
   timerInterval = null;
@@ -231,7 +272,7 @@ function transitionTo(newState) {
   const nextStep = getNextStep();
 
   if (state === States.PREPARE) {
-    timeRemaining = 10; // 10 second intro countdown
+    timeRemaining = 10;
     stepDuration = 10;
     breathingState = 'prepare';
 
@@ -239,10 +280,33 @@ function transitionTo(newState) {
     tts.playChime(523.25, 'triangle', 0.3); // C5 note
 
     // Play TTS greeting
-    if (currentRoutine && currentStep) {
-      tts.speak(
-        `開始伸展流程：${currentRoutine.name}。請準備進行第一個動作：${currentStep.name}。`
-      );
+    if (currentRoutine) {
+      tts.speak(`開始伸展流程：${currentRoutine.name}。請準備。`);
+    }
+  } else if (state === States.EXPLANATION) {
+    timeRemaining = 0;
+    stepDuration = 0;
+    breathingState = 'prepare';
+
+    // Play transition chime
+    tts.playChime(523.25, 'triangle', 0.3); // C5 note
+
+    if (currentStep) {
+      const initialCue = currentStep.ttsCues.find((c) => c.time === 0);
+      const explanationText = initialCue
+        ? initialCue.text
+        : `下一個動作是：${currentStep.ttsName || currentStep.name}。`;
+
+      // Prepend relaxation text from completed action if present
+      const finalSpeakText = relaxationText
+        ? `${relaxationText}。${explanationText}`
+        : explanationText;
+
+      tts.speak(finalSpeakText, () => {
+        if (state === States.EXPLANATION) {
+          transitionTo(States.STRETCHING); // Transition directly to stretching!
+        }
+      });
     }
   } else if (state === States.STRETCHING) {
     timeRemaining = currentStep.duration;
@@ -253,31 +317,46 @@ function transitionTo(newState) {
     // Play chime
     tts.playChime(659.25, 'sine', 0.4); // E5 note
 
-    // Play initial stretch audio
-    const initialCue = currentStep.ttsCues.find((c) => c.time === 0);
-    if (initialCue) {
-      tts.speak(initialCue.text);
-    } else {
-      tts.speak(`開始進行：${currentStep.name}。`);
+    // Speak set number for sets > 1 when stretching starts
+    if (currentStep && currentStep.totalSets > 1 && currentStep.set > 1) {
+      tts.speak(`第 ${currentStep.set} 組`);
     }
+
+    // We do not play initial cue at time 0 of stretching anymore,
+    // as it is already played during States.EXPLANATION.
   } else if (state === States.REST) {
-    timeRemaining = 8; // 8-second rest transition
-    stepDuration = 8;
+    // Decide rest duration: 8 seconds if switching sides, 3 seconds otherwise (same side)
+    let restDuration = 3;
+    if (currentStepIndex > 0) {
+      const prevStep = currentRoutine.steps[currentStepIndex - 1];
+      const nextStep = currentRoutine.steps[currentStepIndex];
+      if (prevStep.side && nextStep.side && prevStep.side !== nextStep.side) {
+        restDuration = 8; // Extended rest for switching sides
+      }
+    }
+
+    timeRemaining = restDuration;
+    stepDuration = restDuration;
     breathingState = 'rest';
 
     // Play soft completion chime
     tts.playChime(440.0, 'sine', 0.5); // A4 note
 
-    if (nextStep) {
-      tts.speak(`休息。下一個動作是：${nextStep.name}。`);
-    } else {
-      tts.speak(`休息。即將結束。`);
-    }
+    // Speak "休息" (Rest) - No side change voice announcement as requested
+    const restAnnouncement = '休息。';
+
+    // Prepend relaxation text from completed set if present
+    const finalSpeakText = relaxationText
+      ? `${relaxationText}。${restAnnouncement}`
+      : restAnnouncement;
+    tts.speak(finalSpeakText);
   } else if (state === States.COMPLETED) {
     // Workout finished!
     tts.playChime(880.0, 'sine', 0.8); // A5 chime
     setTimeout(() => {
-      tts.speak(`做得太棒了！您已完成本次伸展流程。`);
+      const completedText = `做得太棒了！您已完成本次伸展流程。`;
+      const finalSpeakText = relaxationText ? `${relaxationText}。${completedText}` : completedText;
+      tts.speak(finalSpeakText);
     }, 800);
 
     if (callbacks.onComplete) {
@@ -308,6 +387,11 @@ function transitionTo(newState) {
     callbacks.onBreathing(breathingState, 0);
   }
 
+  // Trigger warning beep if duration is exactly 3 seconds
+  if (timeRemaining === 3) {
+    tts.playChime(523.25, 'triangle', 0.1);
+  }
+
   // Start the timer loop
   startTimerLoop();
 }
@@ -326,7 +410,16 @@ function tick() {
     return;
   }
 
+  if (state === States.EXPLANATION) {
+    return;
+  }
+
   timeRemaining--;
+
+  // Trigger warning sound on last 3 seconds of timed states (PREPARE, STRETCHING, REST)
+  if (timeRemaining <= 3 && timeRemaining > 0) {
+    tts.playChime(523.25, 'triangle', 0.1); // Quick short C5 beep
+  }
 
   if (state === States.STRETCHING) {
     totalTimeElapsed++;
@@ -345,11 +438,6 @@ function tick() {
         tts.speak(cue.text);
       }
     }
-  }
-
-  // Trigger warning sound on last 3 seconds of stretching/resting
-  if (timeRemaining <= 3 && timeRemaining > 0) {
-    tts.playChime(523.25, 'triangle', 0.1); // Quick short C5 beep
   }
 
   // Update UI timer
@@ -391,17 +479,24 @@ function updateBreathingCycle() {
 // Transition to next state when timer hits 0
 function handlePhaseExpiry() {
   if (state === States.PREPARE) {
-    transitionTo(States.STRETCHING);
+    currentStepIndex = 0;
+    transitionTo(States.EXPLANATION);
   } else if (state === States.STRETCHING) {
-    // If there are more steps, go to rest, otherwise complete
     if (currentStepIndex < currentRoutine.steps.length - 1) {
-      transitionTo(States.REST);
+      const currentStep = currentRoutine.steps[currentStepIndex];
+      const nextStep = currentRoutine.steps[currentStepIndex + 1];
+      if (nextStep.parentId !== currentStep.parentId) {
+        currentStepIndex++;
+        transitionTo(States.EXPLANATION);
+      } else {
+        currentStepIndex++;
+        transitionTo(States.REST);
+      }
     } else {
       transitionTo(States.COMPLETED);
     }
   } else if (state === States.REST) {
-    // Go to next exercise
-    currentStepIndex++;
+    // Rest expired -> transition to stretching
     transitionTo(States.STRETCHING);
   }
 }

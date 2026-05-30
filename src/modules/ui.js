@@ -235,7 +235,11 @@ function handleEngineStateChange(state, details) {
   // 切換播放/暫停按鈕圖示
   togglePlayPauseIcon(true);
 
+  // 取得秒數單位標籤
+  const secLabel = document.querySelector('.timer-sec-label');
+
   if (state === engine.States.PREPARE) {
+    if (secLabel) secLabel.style.display = 'inline';
     if (stretchNameEl) stretchNameEl.textContent = '準備開始';
     if (instructionsContainer) {
       instructionsContainer.innerHTML = `
@@ -248,7 +252,25 @@ function handleEngineStateChange(state, details) {
     }
 
     document.getElementById('timer-state-label').textContent = '準備';
+  } else if (state === engine.States.EXPLANATION) {
+    if (secLabel) secLabel.style.display = 'none';
+    if (stretchNameEl) stretchNameEl.textContent = details.step.name;
+    if (instructionsContainer) {
+      const listItems = details.step.instructions
+        .map((inst) => `<li>${escapeHTML(inst)}</li>`)
+        .join('');
+      instructionsContainer.innerHTML = `<ol>${listItems}</ol>`;
+    }
+    if (animationContainer) {
+      animationContainer.innerHTML = getAnimationSVG(details.step.animationType);
+    }
+
+    document.getElementById('timer-state-label').textContent = '解說';
+    document.getElementById('timer-countdown').textContent = '💬';
+    const progressBar = document.getElementById('timer-progress-bar');
+    if (progressBar) progressBar.style.strokeDashoffset = TIMER_RING_DASHARRAY;
   } else if (state === engine.States.STRETCHING) {
+    if (secLabel) secLabel.style.display = 'inline';
     if (stretchNameEl) stretchNameEl.textContent = details.step.name;
     if (instructionsContainer) {
       const listItems = details.step.instructions
@@ -262,6 +284,7 @@ function handleEngineStateChange(state, details) {
 
     document.getElementById('timer-state-label').textContent = '伸展';
   } else if (state === engine.States.REST) {
+    if (secLabel) secLabel.style.display = 'inline';
     if (stretchNameEl) stretchNameEl.textContent = '放鬆休息';
     if (instructionsContainer) {
       if (details.nextStep) {
@@ -294,6 +317,9 @@ function handleEngineStateChange(state, details) {
 }
 
 function handleEngineTick(timeRemaining, percent) {
+  if (engine.getState() === engine.States.EXPLANATION) {
+    return;
+  }
   const countdownEl = document.getElementById('timer-countdown');
   if (countdownEl) countdownEl.textContent = timeRemaining;
 
@@ -753,9 +779,7 @@ function setupRoutineCreator() {
         ttsCues.push({ time: midpoint, text: `時間過半，請保持深長呼吸。` });
       }
 
-      if (duration >= 6) {
-        ttsCues.push({ time: duration - 3, text: '三，二，一，慢慢放鬆。' });
-      }
+      ttsCues.push({ time: duration, text: '放鬆。' });
 
       steps.push({
         id: `step-${index}-${Date.now()}`,

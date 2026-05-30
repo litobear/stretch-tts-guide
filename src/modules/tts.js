@@ -100,14 +100,26 @@ export function setTTSCallbacks(onStart, onEnd) {
 
 // Core speak function
 export function speak(text, onFinishedCallback = null) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
+    if (onFinishedCallback) {
+      setTimeout(onFinishedCallback, 1000);
+    }
+    return;
+  }
+
+  // Strip "三，二，一" countdown prefixes to avoid overlapping with precise AudioContext chimes
+  const cleanText = text.replace(/^(三[，、]二[，、]一[，、]?)/, '').trim();
+  if (!cleanText) {
+    if (onFinishedCallback) {
+      setTimeout(onFinishedCallback, 50);
+    }
+    return;
+  }
 
   // Stop any active speech first
   stopSpeaking();
 
-  if (!text) return;
-
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(cleanText);
   activeUtterance = utterance;
 
   if (currentVoice) {
