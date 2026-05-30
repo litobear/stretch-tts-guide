@@ -475,6 +475,38 @@ function togglePlayPauseIcon(isPlaying) {
   }
 }
 
+// 重置自訂流程表單狀態
+function resetCreateModalState() {
+  editingRoutineId = null;
+  const modalTitle = document.getElementById('modal-create-title');
+  if (modalTitle) modalTitle.textContent = '建立自訂伸展流程';
+  const form = document.getElementById('form-custom-routine');
+  if (form) form.reset();
+  const list = document.getElementById('builder-stretches-list');
+  if (list) {
+    list.innerHTML = '';
+    // 補上一個預設空白動作步驟
+    const item = document.createElement('div');
+    item.className = 'builder-stretch-item';
+    item.innerHTML = `
+      <span class="drag-handle">☰</span>
+      <div class="form-inputs-container">
+        <div class="form-inputs-row">
+          <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
+          <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
+          <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
+        </div>
+        <div class="form-inputs-row description-row">
+          <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
+        </div>
+      </div>
+      <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);">✖</button>
+    `;
+    item.querySelector('.remove-step-btn').addEventListener('click', () => item.remove());
+    list.appendChild(item);
+  }
+}
+
 // --- 彈出視窗事件設定 ---
 
 function setupModals() {
@@ -492,38 +524,7 @@ function setupModals() {
   // 開啟視窗
   createBtn.addEventListener('click', () => modals.create.classList.add('active'));
   importBtn.addEventListener('click', () => modals.import.classList.add('active'));
-  
-  // 重置自訂流程表單狀態
-  const resetCreateModalState = () => {
-    editingRoutineId = null;
-    const modalTitle = document.getElementById('modal-create-title');
-    if (modalTitle) modalTitle.textContent = '建立自訂伸展流程';
-    const form = document.getElementById('form-custom-routine');
-    if (form) form.reset();
-    const list = document.getElementById('builder-stretches-list');
-    if (list) {
-      list.innerHTML = '';
-      // 補上一個預設空白動作步驟
-      const item = document.createElement('div');
-      item.className = 'builder-stretch-item';
-      item.innerHTML = `
-        <span class="drag-handle">☰</span>
-        <div class="form-inputs-container">
-          <div class="form-inputs-row">
-            <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
-            <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
-            <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
-          </div>
-          <div class="form-inputs-row description-row">
-            <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
-          </div>
-        </div>
-        <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);">✖</button>
-      `;
-      item.querySelector('.remove-step-btn').addEventListener('click', () => item.remove());
-      list.appendChild(item);
-    }
-  };
+
 
   // 關閉視窗
   const hideModals = () => {
