@@ -303,22 +303,17 @@ function handleEngineStateChange(state, details) {
     document.getElementById('timer-state-label').textContent = '伸展';
   } else if (state === engine.States.REST) {
     if (secLabel) secLabel.style.display = 'inline';
-    if (stretchNameEl) stretchNameEl.textContent = '放鬆休息';
-    if (instructionsContainer) {
-      if (details.nextStep) {
-        instructionsContainer.innerHTML = `
-          <p>請放鬆肌肉，稍作休息。</p>
-          <p>下一個動作是：<strong>${escapeHTML(details.nextStep.name)}</strong></p>
-        `;
-      } else {
-        instructionsContainer.innerHTML = `<p>做得好！流程即將結束，請稍作休息。</p>`;
-      }
-    }
-    if (animationContainer) {
-      animationContainer.innerHTML = getAnimationSVG('default');
-    }
-
     document.getElementById('timer-state-label').textContent = '休息';
+  }
+
+  // 切換 REST 狀態專用的 CSS Class
+  const timerCard = document.querySelector('.timer-card-focused');
+  if (timerCard) {
+    if (state === engine.States.REST) {
+      timerCard.classList.add('is-rest-mode');
+    } else {
+      timerCard.classList.remove('is-rest-mode');
+    }
   }
 }
 

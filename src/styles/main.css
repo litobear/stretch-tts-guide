@@ -497,7 +497,16 @@ p {
   stroke-dasharray: 282.7; /* 2 * PI * r (r=45) */
   stroke-dashoffset: 0;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.1s linear;
+  transition: stroke-dashoffset 0.1s linear, stroke var(--transition-normal);
+}
+
+/* Rest Mode Colors */
+.is-rest-mode .timer-ring .ring-fg {
+  stroke: var(--text-secondary) !important;
+}
+
+.is-rest-mode .timer-number {
+  color: var(--text-secondary) !important;
 }
 
 .timer-labels {
