@@ -147,10 +147,10 @@ function renderRoutinesList() {
       deleteBtn.style.color = 'var(--danger-color)';
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm(`確定要刪除「${routine.name}」伸展流程嗎？`)) {
+        showConfirmDialog(`確定要刪除「${routine.name}」伸展流程嗎？`, () => {
           stretches.deleteCustomRoutine(routine.id);
           renderRoutinesList();
-        }
+        });
       });
       actions.appendChild(deleteBtn);
     }
@@ -357,6 +357,34 @@ function handleEngineBreathing(breathingState, _progress) {
   }
 }
 
+// --- Custom Confirm Dialog ---
+function showConfirmDialog(message, onConfirm) {
+  const modal = document.getElementById('modal-confirm');
+  const msgEl = document.getElementById('modal-confirm-message');
+  const btnOk = document.getElementById('btn-confirm-ok');
+  const btnCancel = document.getElementById('btn-confirm-cancel');
+
+  if (!modal || !msgEl || !btnOk || !btnCancel) return;
+
+  msgEl.textContent = message;
+  modal.classList.add('active');
+
+  // Clean up previous listeners by cloning
+  const newBtnOk = btnOk.cloneNode(true);
+  const newBtnCancel = btnCancel.cloneNode(true);
+  btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+  btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+  newBtnCancel.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  newBtnOk.addEventListener('click', () => {
+    modal.classList.remove('active');
+    if (onConfirm) onConfirm();
+  });
+}
+
 function handleEngineComplete(stats) {
   showScreen('summary');
 
@@ -501,9 +529,11 @@ function setupWorkoutControls() {
   });
 
   stopBtn.addEventListener('click', () => {
-    if (confirm('確定要放棄並結束這次的伸展運動嗎？')) {
+    engine.pauseWorkout();
+    togglePlayPauseIcon(false);
+    showConfirmDialog('確定要放棄並結束這次的伸展運動嗎？', () => {
       engine.stopWorkout();
-    }
+    });
   });
 
   nextBtn.addEventListener('click', () => {
