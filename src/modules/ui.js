@@ -243,7 +243,12 @@ function handleEngineStateChange(state, details) {
   const setCurrent = document.getElementById('timer-set-current');
   const setTotal = document.getElementById('timer-set-total');
 
-  if (details.step && details.step.totalSets > 1) {
+  if (
+    details.step &&
+    details.step.totalSets > 1 &&
+    state !== engine.States.PREPARE &&
+    state !== engine.States.EXPLANATION
+  ) {
     if (setIndicator) setIndicator.style.display = 'flex';
     if (setCurrent) setCurrent.textContent = details.step.set;
     if (setTotal) setTotal.textContent = details.step.totalSets;
