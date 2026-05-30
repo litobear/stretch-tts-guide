@@ -204,17 +204,6 @@ p {
 }
 
 /* --- HOME SCREEN SPECIFIC --- */
-.hero-section {
-  padding: 3rem 0;
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.hero-subtitle {
-  font-size: 1.15rem;
-  margin-top: 0.5rem;
-}
 
 .routines-container {
   margin-top: 1rem;
@@ -1248,10 +1237,6 @@ p {
 
   h2 {
     font-size: 1.75rem;
-  }
-
-  .hero-section {
-    padding: 1.5rem 0;
   }
 
   .routines-grid {
