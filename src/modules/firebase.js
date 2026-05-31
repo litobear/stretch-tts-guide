@@ -75,7 +75,8 @@ export async function signOut() {
 const SYNC_KEYS = [
   'zenstretch_custom_routines',
   'zenstretch_tts_settings',
-  'zenstretch_hide_presets'
+  'zenstretch_hide_presets',
+  'zenstretch_workout_history'
 ];
 
 // Save local data to Firebase
@@ -119,7 +120,7 @@ export async function syncFromCloud() {
           if (data.settings[key] !== undefined) {
             const currentLocal = localStorage.getItem(key);
             
-            if (key === 'zenstretch_custom_routines') {
+            if (key === 'zenstretch_custom_routines' || key === 'zenstretch_workout_history') {
               try {
                 const localArr = currentLocal ? JSON.parse(currentLocal) : [];
                 const cloudArr = JSON.parse(data.settings[key]);

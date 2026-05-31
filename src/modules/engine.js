@@ -64,6 +64,10 @@ export function getStepIndex() {
   return currentStepIndex;
 }
 
+export function getTotalTimeElapsed() {
+  return totalTimeElapsed;
+}
+
 // Helper: Swap "左" and "右" in a string
 function swapLeftRight(text) {
   if (!text) return text;

@@ -1354,3 +1354,65 @@ p {
     0 0 0 3px var(--bg-secondary) inset,
     0 4px 10px rgba(0, 0, 0, 0.15);
 }
+
+/* --- CALENDAR STAMP VIEW --- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.calendar-day-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-bottom: 0.5rem;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.calendar-cell:not(.empty):hover {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.calendar-cell.selected {
+  background-color: var(--accent-soft);
+  border: 1px solid var(--accent-primary);
+  font-weight: bold;
+}
+
+.calendar-cell.empty {
+  cursor: default;
+}
+
+.calendar-cell .date-num {
+  z-index: 1;
+}
+
+.calendar-cell.today .date-num {
+  font-weight: bold;
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.calendar-stamp {
+  position: absolute;
+  font-size: 1.25rem;
+  opacity: 0.8;
+  z-index: 0;
+  pointer-events: none;
+}
