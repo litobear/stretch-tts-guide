@@ -20,6 +20,7 @@ const modals = {
   create: document.getElementById('modal-create-routine'),
   import: document.getElementById('modal-import-routine'),
   share: document.getElementById('modal-share-routine'),
+  aiImport: document.getElementById('modal-ai-import'),
 };
 
 // 圓形計時環常數
@@ -987,7 +988,7 @@ function resetCreateModalState() {
   const form = document.getElementById('form-custom-routine');
   if (form) form.reset();
   const restTimeInput = document.getElementById('custom-routine-rest-time');
-  if (restTimeInput) restTimeInput.value = '3';
+  if (restTimeInput) restTimeInput.value = '5';
   const list = document.getElementById('builder-stretches-list');
   if (list) {
     list.innerHTML = '';
@@ -1033,22 +1034,33 @@ function resetCreateModalState() {
 function setupModals() {
   const createBtn = document.getElementById('btn-create-routine');
   const importBtn = document.getElementById('btn-import-routine');
+  const createAiBtn = document.getElementById('btn-create-routine-ai');
 
   const closeCreateBtn = document.getElementById('btn-close-create-modal');
   const closeImportBtn = document.getElementById('btn-close-import-modal');
   const closeShareBtn = document.getElementById('btn-close-share-modal');
+  const closeAiBtn = document.getElementById('btn-close-ai-modal');
 
   const cancelCreateBtn = document.getElementById('btn-cancel-create');
   const cancelImportBtn = document.getElementById('btn-cancel-import');
   const closeShareBtn2 = document.getElementById('btn-close-share');
+  const cancelAiBtn = document.getElementById('btn-cancel-ai-import');
 
   // 開啟視窗
   createBtn.addEventListener('click', () => modals.create.classList.add('active'));
   importBtn.addEventListener('click', () => modals.import.classList.add('active'));
+  if (createAiBtn) {
+    createAiBtn.addEventListener('click', () => {
+      document.getElementById('ai-json-input').value = '';
+      if (modals.aiImport) modals.aiImport.classList.add('active');
+    });
+  }
 
   // 關閉視窗
   const hideModals = () => {
-    Object.values(modals).forEach((m) => m.classList.remove('active'));
+    Object.values(modals).forEach((m) => {
+      if (m) m.classList.remove('active');
+    });
   };
 
   const handleCancelCreate = () => {
@@ -1061,13 +1073,16 @@ function setupModals() {
   closeCreateBtn.addEventListener('click', handleCancelCreate);
   closeImportBtn.addEventListener('click', hideModals);
   closeShareBtn.addEventListener('click', hideModals);
+  if (closeAiBtn) closeAiBtn.addEventListener('click', hideModals);
 
   cancelCreateBtn.addEventListener('click', handleCancelCreate);
   cancelImportBtn.addEventListener('click', hideModals);
   closeShareBtn2.addEventListener('click', hideModals);
+  if (cancelAiBtn) cancelAiBtn.addEventListener('click', hideModals);
 
   // 點擊背景遮罩關閉
   Object.values(modals).forEach((m) => {
+    if (!m) return;
     m.addEventListener('click', (e) => {
       if (e.target === m) {
         // 編輯時點擊外部不自動關閉，避免誤觸遺失資料
@@ -1112,6 +1127,62 @@ function setupModals() {
       errorEl.style.display = 'block';
     }
   });
+
+  // 處理 AI 匯入
+  const btnCopyAiPrompt = document.getElementById('btn-copy-ai-prompt');
+  if (btnCopyAiPrompt) {
+    btnCopyAiPrompt.addEventListener('click', () => {
+      const promptText = document.getElementById('ai-prompt-text').innerText;
+      navigator.clipboard.writeText(promptText).then(() => {
+        const originalText = btnCopyAiPrompt.innerText;
+        btnCopyAiPrompt.innerText = '✅ 已複製';
+        setTimeout(() => {
+          btnCopyAiPrompt.innerText = originalText;
+        }, 2000);
+      });
+    });
+  }
+
+  const btnSubmitAiImport = document.getElementById('btn-submit-ai-import');
+  if (btnSubmitAiImport) {
+    btnSubmitAiImport.addEventListener('click', () => {
+      let jsonStr = document.getElementById('ai-json-input').value.trim();
+      if (!jsonStr) return;
+
+      // 去除可能夾帶的 Markdown 標籤 (如 ```json ... ```)
+      const match = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) {
+        jsonStr = match[1].trim();
+      }
+
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed.steps || !Array.isArray(parsed.steps)) {
+          throw new Error('匯入的資料格式不正確，找不到 steps 陣列');
+        }
+
+        // 將解析出的動作陣列轉換為 Routine 格式，交給 openEditRoutineModal 處理
+        const fakeRoutine = {
+          name: parsed.name || 'AI 生成伸展流程',
+          description: parsed.description || '由 AI 產生的伸展流程，請確認內容後儲存。',
+          theme: 'ocean',
+          restTime: 5,
+          steps: parsed.steps.map((s, idx) => ({
+            name: s.name || `動作 ${idx + 1}`,
+            duration: parseInt(s.duration) || 30,
+            repeat: parseInt(s.repeat) || 1,
+            bilateral: !!s.bilateral,
+            description: s.description || '',
+          })),
+        };
+
+        hideModals();
+        openEditRoutineModal(fakeRoutine);
+      } catch (err) {
+        alert('解析 JSON 失敗，請確認格式是否正確。\n' + err.message);
+      }
+    });
+  }
 }
 
 // --- 自訂動作編輯器邏輯 (Form Builder) ---
@@ -1251,7 +1322,7 @@ function setupRoutineCreator() {
     const theme = selectedThemeEl ? selectedThemeEl.value : 'sage';
 
     const restTimeInput = document.getElementById('custom-routine-rest-time');
-    const restTime = restTimeInput ? parseInt(restTimeInput.value) || 3 : 3;
+    const restTime = restTimeInput ? parseInt(restTimeInput.value) || 5 : 5;
 
     const newRoutine = {
       id: editingRoutineId || undefined,
@@ -1337,7 +1408,7 @@ function openEditRoutineModal(routine) {
 
   // 設定休息時間
   const restTimeInput = document.getElementById('custom-routine-rest-time');
-  if (restTimeInput) restTimeInput.value = routine.restTime !== undefined ? routine.restTime : 3;
+  if (restTimeInput) restTimeInput.value = routine.restTime !== undefined ? routine.restTime : 5;
 
   modals.create.classList.add('active');
 }
@@ -1359,7 +1430,7 @@ function openShareModal(routine) {
     n: routine.name,
     d: routine.description,
     t: stretches.getRoutineTheme(routine),
-    rt: routine.restTime !== undefined ? routine.restTime : 3,
+    rt: routine.restTime !== undefined ? routine.restTime : 5,
     s: routine.steps.map((s) => [
       s.name, // 0
       s.duration, // 1
@@ -1438,7 +1509,7 @@ function handleSharedUrlImport() {
       name: parsed.n,
       description: parsed.d || '',
       theme: parsed.t || 'ocean',
-      restTime: parsed.rt !== undefined ? parsed.rt : 3,
+      restTime: parsed.rt !== undefined ? parsed.rt : 5,
       steps: parsed.s.map((s) => ({
         name: s[0],
         duration: s[1],
