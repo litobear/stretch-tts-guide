@@ -45,7 +45,7 @@ export function saveSettings() {
     sfx: soundEffectsEnabled,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  import('./firebase.js').then(module => module.syncToCloud());
+  import('./firebase.js').then((module) => module.syncToCloud());
 }
 
 // Fetch available voices

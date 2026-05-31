@@ -497,7 +497,9 @@ p {
   stroke-dasharray: 282.7; /* 2 * PI * r (r=45) */
   stroke-dashoffset: 0;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.1s linear, stroke var(--transition-normal);
+  transition:
+    stroke-dashoffset 0.1s linear,
+    stroke var(--transition-normal);
 }
 
 /* Rest Mode Colors */

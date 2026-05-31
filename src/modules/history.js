@@ -6,9 +6,7 @@ export function getAllRecords() {
   if (!json) return [];
   try {
     const records = JSON.parse(json);
-    return records
-      .filter((r) => !r.isDeleted)
-      .sort((a, b) => b.date - a.date);
+    return records.filter((r) => !r.isDeleted).sort((a, b) => b.date - a.date);
   } catch (e) {
     console.error('Error parsing workout history:', e);
     return [];
@@ -42,7 +40,7 @@ export function saveRecord(routineId, routineName, duration) {
 
   // 觸發同步
   import('./firebase.js').then((module) => module.syncToCloud());
-  
+
   return newRecord;
 }
 
@@ -63,7 +61,7 @@ export function deleteRecord(id) {
     records[idx].isDeleted = true;
     records[idx].updatedAt = Date.now();
     localStorage.setItem(HISTORY_KEY, JSON.stringify(records));
-    
+
     // 觸發同步
     import('./firebase.js').then((module) => module.syncToCloud());
   }

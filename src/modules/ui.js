@@ -5,6 +5,7 @@ import * as tts from './tts.js';
 import * as history from './history.js';
 import { getAnimationSVG } from './animations.js';
 import { signIn, signOut, onAuthChange, syncFromCloud } from './firebase.js';
+import LZString from 'lz-string';
 
 // DOM 節點選擇器
 const screens = {
@@ -79,9 +80,9 @@ export function initUI() {
     hidePresetsCheckbox.addEventListener('change', (e) => {
       localStorage.setItem('zenstretch_hide_presets', e.target.checked);
       renderRoutinesList();
-      
+
       // 動態載入並觸發同步
-      import('./firebase.js').then(module => {
+      import('./firebase.js').then((module) => {
         module.syncToCloud();
       });
     });
@@ -252,14 +253,14 @@ function handleEngineStateChange(state, details) {
   if (historyToggleBtn) {
     if (state !== engine.States.IDLE && state !== engine.States.COMPLETED) {
       historyToggleBtn.disabled = true;
-      historyToggleBtn.title = "運動進行中無法查看紀錄";
-      historyToggleBtn.style.opacity = "0.5";
-      historyToggleBtn.style.cursor = "not-allowed";
+      historyToggleBtn.title = '運動進行中無法查看紀錄';
+      historyToggleBtn.style.opacity = '0.5';
+      historyToggleBtn.style.cursor = 'not-allowed';
     } else {
       historyToggleBtn.disabled = false;
-      historyToggleBtn.title = "運動紀錄";
-      historyToggleBtn.style.opacity = "1";
-      historyToggleBtn.style.cursor = "pointer";
+      historyToggleBtn.title = '運動紀錄';
+      historyToggleBtn.style.opacity = '1';
+      historyToggleBtn.style.cursor = 'pointer';
     }
   }
 
@@ -431,6 +432,44 @@ function showConfirmDialog(message, onConfirm) {
   });
 }
 
+// 顯示 Toast 浮動提示
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '2rem';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.backgroundColor = 'var(--accent-primary)';
+  toast.style.color = 'white';
+  toast.style.padding = '0.75rem 1.5rem';
+  toast.style.borderRadius = '9999px';
+  toast.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.5)';
+  toast.style.zIndex = '9999';
+  toast.style.opacity = '0';
+  toast.style.fontWeight = 'bold';
+  toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+  document.body.appendChild(toast);
+
+  // 觸發進場動畫
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(-10px)';
+  });
+
+  // 3秒後自動消失
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
+}
+
 function handleEngineComplete(stats) {
   showScreen('summary');
 
@@ -480,7 +519,7 @@ let currentFilterDate = null;
 function setupHistoryUI() {
   const historyToggleBtn = document.getElementById('history-toggle');
   const historyBackBtn = document.getElementById('btn-history-back');
-  
+
   if (historyToggleBtn) {
     historyToggleBtn.addEventListener('click', () => {
       const isHistoryScreen = screens.history && screens.history.classList.contains('active');
@@ -496,17 +535,17 @@ function setupHistoryUI() {
       }
     });
   }
-  
+
   if (historyBackBtn) {
     historyBackBtn.addEventListener('click', () => {
       showScreen('home');
     });
   }
-  
+
   const btnPrev = document.getElementById('btn-cal-prev');
   const btnNext = document.getElementById('btn-cal-next');
   const btnClear = document.getElementById('btn-clear-date-filter');
-  
+
   if (btnPrev) {
     btnPrev.addEventListener('click', () => {
       currentCalMonth--;
@@ -517,7 +556,7 @@ function setupHistoryUI() {
       renderCalendar();
     });
   }
-  
+
   if (btnNext) {
     btnNext.addEventListener('click', () => {
       currentCalMonth++;
@@ -528,7 +567,7 @@ function setupHistoryUI() {
       renderCalendar();
     });
   }
-  
+
   if (btnClear) {
     btnClear.addEventListener('click', () => {
       currentFilterDate = null;
@@ -542,57 +581,74 @@ function renderCalendar() {
   const calGrid = document.getElementById('calendar-grid');
   const calHeader = document.getElementById('calendar-month-year');
   if (!calGrid || !calHeader) return;
-  
-  const monthNames = ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月', '7 月', '8 月', '9 月', '10 月', '11 月', '12 月'];
+
+  const monthNames = [
+    '1 月',
+    '2 月',
+    '3 月',
+    '4 月',
+    '5 月',
+    '6 月',
+    '7 月',
+    '8 月',
+    '9 月',
+    '10 月',
+    '11 月',
+    '12 月',
+  ];
   calHeader.textContent = `${currentCalYear} 年 ${monthNames[currentCalMonth]}`;
-  
+
   const records = history.getAllRecords();
   const daysWithRecords = new Set();
-  records.forEach(r => {
+  records.forEach((r) => {
     const d = new Date(r.date);
     const dateStr = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     daysWithRecords.add(dateStr);
   });
-  
+
   calGrid.innerHTML = '';
-  
+
   const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-  dayNames.forEach(day => {
+  dayNames.forEach((day) => {
     const headerCell = document.createElement('div');
     headerCell.className = 'calendar-day-header';
     headerCell.textContent = day;
     calGrid.appendChild(headerCell);
   });
-  
+
   const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
   const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
-  
+
   for (let i = 0; i < firstDay; i++) {
     const emptyCell = document.createElement('div');
     emptyCell.className = 'calendar-cell empty';
     calGrid.appendChild(emptyCell);
   }
-  
+
   const today = new Date();
   for (let d = 1; d <= daysInMonth; d++) {
     const cell = document.createElement('div');
     cell.className = 'calendar-cell';
     const dateStr = `${currentCalYear}-${currentCalMonth}-${d}`;
-    const isoDateStr = `${currentCalYear}-${(currentCalMonth+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-    
-    if (currentCalYear === today.getFullYear() && currentCalMonth === today.getMonth() && d === today.getDate()) {
+    const isoDateStr = `${currentCalYear}-${(currentCalMonth + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+
+    if (
+      currentCalYear === today.getFullYear() &&
+      currentCalMonth === today.getMonth() &&
+      d === today.getDate()
+    ) {
       cell.classList.add('today');
     }
-    
+
     if (currentFilterDate === isoDateStr) {
       cell.classList.add('selected');
     }
-    
+
     const numSpan = document.createElement('span');
     numSpan.className = 'date-num';
     numSpan.textContent = d;
     cell.appendChild(numSpan);
-    
+
     if (daysWithRecords.has(dateStr)) {
       const stamp = document.createElement('span');
       stamp.className = 'calendar-stamp';
@@ -601,10 +657,11 @@ function renderCalendar() {
       stamp.style.justifyContent = 'center';
       stamp.style.width = '100%';
       stamp.style.height = '100%';
-      stamp.innerHTML = '<div style="width: 32px; height: 32px; border: 2px solid var(--accent-primary); border-radius: 50%; opacity: 0.6;"></div>';
+      stamp.innerHTML =
+        '<div style="width: 32px; height: 32px; border: 2px solid var(--accent-primary); border-radius: 50%; opacity: 0.6;"></div>';
       cell.appendChild(stamp);
     }
-    
+
     cell.addEventListener('click', () => {
       if (currentFilterDate === isoDateStr) {
         currentFilterDate = null;
@@ -614,7 +671,7 @@ function renderCalendar() {
       renderCalendar();
       renderHistoryList();
     });
-    
+
     calGrid.appendChild(cell);
   }
 }
@@ -624,13 +681,13 @@ function renderHistoryList() {
   const title = document.getElementById('history-list-title');
   const clearBtn = document.getElementById('btn-clear-date-filter');
   if (!container) return;
-  
+
   let records = history.getAllRecords();
-  
+
   if (currentFilterDate) {
-    records = records.filter(r => {
+    records = records.filter((r) => {
       const d = new Date(r.date);
-      const rDateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      const rDateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
       return rDateStr === currentFilterDate;
     });
     if (title) title.textContent = `${currentFilterDate} 的紀錄`;
@@ -639,15 +696,15 @@ function renderHistoryList() {
     if (title) title.textContent = '所有紀錄';
     if (clearBtn) clearBtn.style.display = 'none';
   }
-  
+
   container.innerHTML = '';
-  
+
   if (records.length === 0) {
     container.innerHTML = '<div class="loading-placeholder">暫無運動紀錄</div>';
     return;
   }
-  
-  records.forEach(record => {
+
+  records.forEach((record) => {
     const card = document.createElement('div');
     card.className = 'history-card card fade-in';
     card.style.display = 'flex';
@@ -655,20 +712,20 @@ function renderHistoryList() {
     card.style.justifyContent = 'space-between';
     card.style.padding = '0.75rem 1rem';
     card.style.marginBottom = '0.75rem';
-    
+
     const d = new Date(record.date);
-    const dateStr = `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    const dateStr = `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
     const min = Math.floor(record.duration / 60);
     const sec = record.duration % 60;
     const timeStr = `${min} 分 ${sec} 秒`;
-    
+
     card.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; flex: 1; overflow: hidden; padding-right: 0.5rem; gap: 0.5rem;">
         <h4 style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1.05rem;" title="${escapeHTML(record.routineName)}">
           ${escapeHTML(record.routineName)}
         </h4>
         <div style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0;">
-          <span>${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}</span> • <span>${timeStr}</span>
+          <span>${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}</span> • <span>${timeStr}</span>
         </div>
       </div>
       <button class="icon-btn btn-delete-history" aria-label="刪除紀錄" style="color: var(--danger-color); padding: 0.25rem; min-height: auto; flex-shrink: 0;">
@@ -677,7 +734,7 @@ function renderHistoryList() {
         </svg>
       </button>
     `;
-    
+
     const deleteBtn = card.querySelector('.btn-delete-history');
     deleteBtn.addEventListener('click', () => {
       showConfirmDialog('確定要刪除這筆運動紀錄嗎？', () => {
@@ -685,7 +742,7 @@ function renderHistoryList() {
         renderHistoryList();
       });
     });
-    
+
     container.appendChild(card);
   });
 }
@@ -776,7 +833,7 @@ function setupSettingsDrawer() {
   onAuthChange(async (user) => {
     const promptPopup = document.getElementById('login-prompt-popup');
     const closePromptBtn = document.getElementById('btn-close-login-prompt');
-    
+
     if (closePromptBtn && !closePromptBtn.dataset.bound) {
       closePromptBtn.dataset.bound = 'true';
       closePromptBtn.addEventListener('click', () => {
@@ -790,19 +847,19 @@ function setupSettingsDrawer() {
       authStatusText.textContent = `已登入：${user.email}`;
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
-      
+
       // 登入成功後，嘗試從雲端下載最新資料並覆蓋本地
       const hasUpdates = await syncFromCloud();
       if (hasUpdates) {
         // 更新畫面上的狀態
         renderRoutinesList();
-        
+
         // 更新 TTS 設定與隱藏預設開關的顯示狀態
         const hidePresetsCheckbox = document.getElementById('toggle-hide-presets');
         if (hidePresetsCheckbox) {
           hidePresetsCheckbox.checked = localStorage.getItem('zenstretch_hide_presets') === 'true';
         }
-        
+
         rateSlider.value = tts.getRate();
         rateVal.textContent = `${tts.getRate()}x`;
         volSlider.value = tts.getVolume();
@@ -813,7 +870,7 @@ function setupSettingsDrawer() {
       authStatusText.textContent = '尚未登入';
       loginBtn.style.display = 'inline-block';
       logoutBtn.style.display = 'none';
-      
+
       if (promptPopup && localStorage.getItem('zenstretch_dismissed_login_prompt') !== 'true') {
         setTimeout(() => {
           promptPopup.style.display = 'block';
@@ -878,9 +935,9 @@ function setupWorkoutControls() {
       const routine = engine.getCurrentRoutine();
       const totalTime = engine.getTotalTimeElapsed();
       if (routine && totalTime > 0) {
-        history.saveRecord(routine.id, routine.name + " (未完成)", totalTime);
+        history.saveRecord(routine.id, routine.name + ' (未完成)', totalTime);
       }
-      
+
       engine.stopWorkout();
     });
   });
@@ -1117,7 +1174,7 @@ function setupRoutineCreator() {
     const items = list.querySelectorAll('.builder-stretch-item');
 
     if (items.length === 0) {
-      alert('請至少新增一個動作步驟。');
+      showToast('請至少新增一個動作步驟。');
       return;
     }
 
@@ -1144,7 +1201,6 @@ function setupRoutineCreator() {
       } else {
         instructions.push(`請做好準備，調整成適合「${name}」的舒適姿勢。`);
       }
-
 
       // 自動生成語音播報內容，將多行以逗號連接
       const ttsText =
@@ -1278,30 +1334,29 @@ function openShareModal(routine) {
   copyBtn.textContent = '複製';
   qrContainer.innerHTML = '<div id="qr-loading">正在產生 QR Code...</div>';
 
-  // 過濾多餘欄位，精簡分享內容
+  // 過濾多餘欄位並轉為高密度 Tuple 格式，極致縮減 JSON 長度
   const cleanRoutine = {
-    name: routine.name,
-    description: routine.description,
-    durationText: routine.durationText,
-    theme: stretches.getRoutineTheme(routine),
-    steps: routine.steps.map((s) => ({
-      name: s.name,
-      duration: s.duration,
-      repeat: s.repeat,
-      bilateral: s.bilateral,
-      description: s.description,
-      animationType: s.animationType,
-      instructions: s.instructions,
-      ttsCues: s.ttsCues,
-    })),
+    n: routine.name,
+    d: routine.description,
+    t: stretches.getRoutineTheme(routine),
+    s: routine.steps.map((s) => [
+      s.name, // 0
+      s.duration, // 1
+      s.repeat, // 2
+      s.bilateral, // 3
+      s.description, // 4
+      s.animationType, // 5
+      s.instructions, // 6
+      s.ttsCues.map((c) => [c.time, c.text]), // 7
+    ]),
   };
 
-  // 將 JSON 字串轉換為 Base64 格式
+  // 將 JSON 字串轉換為 LZ-String 壓縮格式，並加上 'lz_' 前綴以供識別
   const jsonString = JSON.stringify(cleanRoutine);
-  const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+  const compressedData = 'lz_' + LZString.compressToEncodedURIComponent(jsonString);
 
   // 建立分享連結
-  const shareUrl = `${window.location.origin}${window.location.pathname}#share=${base64Data}`;
+  const shareUrl = `${window.location.origin}${window.location.pathname}#share=${compressedData}`;
   urlInput.value = shareUrl;
 
   modals.share.classList.add('active');
@@ -1337,11 +1392,42 @@ function openShareModal(routine) {
 function handleSharedUrlImport() {
   if (!window.location.hash.startsWith('#share=')) return;
 
-  const base64Data = window.location.hash.split('#share=')[1];
+  const hashData = window.location.hash.split('#share=')[1];
 
   try {
-    const jsonString = decodeURIComponent(escape(atob(base64Data)));
-    const routine = JSON.parse(jsonString);
+    if (!hashData.startsWith('lz_')) {
+      throw new Error('不支援的網址格式');
+    }
+
+    const compressedData = hashData.substring(3);
+    const jsonString = LZString.decompressFromEncodedURIComponent(compressedData);
+
+    if (!jsonString) {
+      throw new Error('解壓縮失敗');
+    }
+
+    const parsed = JSON.parse(jsonString);
+
+    // 必定為高密度 Tuple 格式
+    if (!parsed.s) {
+      throw new Error('不支援的資料結構');
+    }
+
+    const routine = {
+      name: parsed.n,
+      description: parsed.d || '',
+      theme: parsed.t || 'ocean',
+      steps: parsed.s.map((s) => ({
+        name: s[0],
+        duration: s[1],
+        repeat: s[2],
+        bilateral: s[3],
+        description: s[4],
+        animationType: s[5],
+        instructions: s[6],
+        ttsCues: s[7] ? s[7].map((c) => ({ time: c[0], text: c[1] })) : [],
+      })),
+    };
 
     if (routine && routine.name && routine.steps) {
       const saved = stretches.saveCustomRoutine(routine);
@@ -1349,7 +1435,7 @@ function handleSharedUrlImport() {
       // 清空 URL Hash 維持網址整潔
       window.history.replaceState(null, null, ' ');
 
-      alert(`成功匯入分享流程：「${saved.name}」！`);
+      showToast(`成功匯入分享流程：「${saved.name}」！`);
     }
   } catch (err) {
     console.error('自動解析 URL 雜湊匯入失敗:', err);

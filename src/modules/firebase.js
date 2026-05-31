@@ -1,27 +1,22 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
-  onAuthStateChanged 
+  onAuthStateChanged,
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc 
-} from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDeuwjlrriFqlhR3JVV9rvZ6ZptJuBmgeE",
-  authDomain: "zenstretch-sync.firebaseapp.com",
-  projectId: "zenstretch-sync",
-  storageBucket: "zenstretch-sync.firebasestorage.app",
-  messagingSenderId: "1089664299968",
-  appId: "1:1089664299968:web:12378283d000031e578e25",
-  measurementId: "G-CGXCZDEGHL"
+  apiKey: 'AIzaSyDeuwjlrriFqlhR3JVV9rvZ6ZptJuBmgeE',
+  authDomain: 'zenstretch-sync.firebaseapp.com',
+  projectId: 'zenstretch-sync',
+  storageBucket: 'zenstretch-sync.firebasestorage.app',
+  messagingSenderId: '1089664299968',
+  appId: '1:1089664299968:web:12378283d000031e578e25',
+  measurementId: 'G-CGXCZDEGHL',
 };
 
 // Initialize Firebase
@@ -56,7 +51,7 @@ export async function signIn() {
     const result = await signInWithPopup(auth, provider);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with Google", error);
+    console.error('Error signing in with Google', error);
     throw error;
   }
 }
@@ -66,7 +61,7 @@ export async function signOut() {
   try {
     await firebaseSignOut(auth);
   } catch (error) {
-    console.error("Error signing out", error);
+    console.error('Error signing out', error);
     throw error;
   }
 }
@@ -76,15 +71,15 @@ const SYNC_KEYS = [
   'zenstretch_custom_routines',
   'zenstretch_tts_settings',
   'zenstretch_hide_presets',
-  'zenstretch_workout_history'
+  'zenstretch_workout_history',
 ];
 
 // Save local data to Firebase
 export async function syncToCloud() {
   if (!currentUser) return;
-  
+
   const dataToSync = {};
-  SYNC_KEYS.forEach(key => {
+  SYNC_KEYS.forEach((key) => {
     const val = localStorage.getItem(key);
     if (val !== null) {
       dataToSync[key] = val;
@@ -93,10 +88,14 @@ export async function syncToCloud() {
 
   try {
     const userRef = doc(db, 'users', currentUser.uid);
-    await setDoc(userRef, {
-      settings: dataToSync,
-      lastUpdatedAt: new Date().toISOString()
-    }, { merge: true });
+    await setDoc(
+      userRef,
+      {
+        settings: dataToSync,
+        lastUpdatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
     console.log('Data synced to Firebase successfully.');
   } catch (error) {
     console.error('Error syncing to Firebase:', error);
@@ -116,19 +115,19 @@ export async function syncFromCloud() {
       if (data.settings) {
         let changed = false;
         let needsUpload = false;
-        SYNC_KEYS.forEach(key => {
+        SYNC_KEYS.forEach((key) => {
           if (data.settings[key] !== undefined) {
             const currentLocal = localStorage.getItem(key);
-            
+
             if (key === 'zenstretch_custom_routines' || key === 'zenstretch_workout_history') {
               try {
                 const localArr = currentLocal ? JSON.parse(currentLocal) : [];
                 const cloudArr = JSON.parse(data.settings[key]);
-                
+
                 const mergedMap = new Map();
-                localArr.forEach(r => mergedMap.set(r.id, r));
-                
-                cloudArr.forEach(cloudR => {
+                localArr.forEach((r) => mergedMap.set(r.id, r));
+
+                cloudArr.forEach((cloudR) => {
                   const localR = mergedMap.get(cloudR.id);
                   if (!localR) {
                     mergedMap.set(cloudR.id, cloudR);
@@ -140,14 +139,14 @@ export async function syncFromCloud() {
                     }
                   }
                 });
-                
+
                 const mergedArr = Array.from(mergedMap.values());
                 const mergedJson = JSON.stringify(mergedArr);
-                
+
                 if (mergedJson !== data.settings[key]) {
                   needsUpload = true;
                 }
-                
+
                 if (currentLocal !== mergedJson) {
                   localStorage.setItem(key, mergedJson);
                   changed = true;
@@ -167,7 +166,7 @@ export async function syncFromCloud() {
             }
           }
         });
-        
+
         if (needsUpload) {
           setTimeout(() => syncToCloud(), 1000);
         }

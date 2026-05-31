@@ -138,7 +138,7 @@ export function startWorkout(routine) {
                 } else {
                   newText = `${ttsName}。` + newText;
                 }
-                
+
                 // Remove legacy "下一個動作是：" prefixes dynamically for backward compatibility
                 newText = newText.replace(/下一個動作[是，：]*\s*/g, '');
               }
@@ -341,7 +341,6 @@ function transitionTo(newState) {
         startTimerLoop();
       }
     });
-
   } else if (state === States.REST) {
     // 3 seconds rest between sets of the same side/action
     let restDuration = 3;
