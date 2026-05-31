@@ -266,8 +266,17 @@ function handleEngineStateChange(state, details) {
   }
 
   if (state === engine.States.IDLE) {
+    releaseWakeLock();
     showScreen('home');
     return;
+  }
+
+  if (state === engine.States.COMPLETED) {
+    releaseWakeLock();
+  } else {
+    if (!wakeLock) {
+      requestWakeLock();
+    }
   }
 
   showScreen('workout');
@@ -1511,6 +1520,45 @@ function setupMobileLayout() {
   // 初始化時執行一次
   handleResize(mql);
 }
+
+// --- Screen Wake Lock 避免螢幕休眠 ---
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Screen Wake Lock acquired');
+    }
+  } catch (err) {
+    console.warn('Wake Lock error:', err);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock
+      .release()
+      .then(() => {
+        wakeLock = null;
+        console.log('Screen Wake Lock released');
+      })
+      .catch((err) => console.warn(err));
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const currentState = engine.getState();
+    if (
+      currentState &&
+      currentState !== engine.States.IDLE &&
+      currentState !== engine.States.COMPLETED
+    ) {
+      requestWakeLock();
+    }
+  }
+});
 
 // --- 拖拉排序邏輯 ---
 let draggedItem = null;

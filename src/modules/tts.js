@@ -14,6 +14,11 @@ let soundEffectsEnabled = true;
 let activeUtterance = null;
 let isSpeakingState = false;
 
+// Replay state tracking
+let lastSpokenText = '';
+let lastOnFinishedCallback = null;
+let wasPausedWhileSpeaking = false;
+
 // Callbacks
 let globalOnStart = null;
 let globalOnEnd = null;
@@ -101,6 +106,10 @@ export function setTTSCallbacks(onStart, onEnd) {
 
 // Core speak function
 export function speak(text, onFinishedCallback = null) {
+  lastSpokenText = text;
+  lastOnFinishedCallback = onFinishedCallback;
+  wasPausedWhileSpeaking = false;
+
   if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
     if (onFinishedCallback) {
       setTimeout(onFinishedCallback, 1000);
@@ -189,27 +198,32 @@ export function playChime(frequency = 587.33, type = 'sine', duration = 0.5) {
   }
 }
 
-// Pause voice
+// Pause voice (Cancel and remember to replay)
 export function pauseSpeaking() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  window.speechSynthesis.pause();
+  if (isSpeakingState || activeUtterance) {
+    wasPausedWhileSpeaking = true;
+  }
+  window.speechSynthesis.cancel();
   isSpeakingState = false;
   if (globalOnEnd) globalOnEnd(); // Stop visual waveform
 }
 
-// Resume voice
+// Resume voice (Replay from beginning if paused during speech)
 export function resumeSpeaking() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  window.speechSynthesis.resume();
-  if (activeUtterance) {
-    isSpeakingState = true;
-    if (globalOnStart) globalOnStart(); // Restart visual waveform
+  if (wasPausedWhileSpeaking && lastSpokenText) {
+    speak(lastSpokenText, lastOnFinishedCallback);
+  } else {
+    window.speechSynthesis.resume(); // Fallback for edge cases
   }
+  wasPausedWhileSpeaking = false;
 }
 
 // Stop speaking and clear all queues
 export function stopSpeaking() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  wasPausedWhileSpeaking = false;
   window.speechSynthesis.cancel();
   isSpeakingState = false;
   activeUtterance = null;
