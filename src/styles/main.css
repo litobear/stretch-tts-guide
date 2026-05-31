@@ -1226,7 +1226,7 @@ p {
 }
 
 /* --- RESPONSIVE STYLING --- */
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .workout-layout {
     grid-template-columns: 1fr;
   }
