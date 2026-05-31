@@ -473,13 +473,6 @@ function updateBreathingCycle() {
 
   if (newBreathingState !== breathingState) {
     breathingState = newBreathingState;
-
-    // Optional soft pitch chime when switching breathing states to guide eyes-free users
-    if (breathingState === 'inhale') {
-      tts.playChime(329.63, 'sine', 0.15); // E4 note
-    } else {
-      tts.playChime(261.63, 'sine', 0.15); // C4 note
-    }
   }
 
   if (callbacks.onBreathing) {

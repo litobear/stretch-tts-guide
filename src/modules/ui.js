@@ -248,6 +248,21 @@ function applyActiveRoutineTheme(routine) {
 }
 
 function handleEngineStateChange(state, details) {
+  const historyToggleBtn = document.getElementById('history-toggle');
+  if (historyToggleBtn) {
+    if (state !== engine.States.IDLE && state !== engine.States.COMPLETED) {
+      historyToggleBtn.disabled = true;
+      historyToggleBtn.title = "運動進行中無法查看紀錄";
+      historyToggleBtn.style.opacity = "0.5";
+      historyToggleBtn.style.cursor = "not-allowed";
+    } else {
+      historyToggleBtn.disabled = false;
+      historyToggleBtn.title = "運動紀錄";
+      historyToggleBtn.style.opacity = "1";
+      historyToggleBtn.style.cursor = "pointer";
+    }
+  }
+
   if (state === engine.States.IDLE) {
     showScreen('home');
     return;
