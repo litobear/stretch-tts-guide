@@ -772,6 +772,17 @@ function setupSettingsDrawer() {
   closeBtn.addEventListener('click', closeDrawer);
   overlay.addEventListener('click', closeDrawer);
 
+  // 顯示版本更新時間
+  const buildTimeEl = document.getElementById('app-build-time');
+  if (buildTimeEl) {
+    /* global __BUILD_TIME__ */
+    try {
+      buildTimeEl.textContent = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '開發環境';
+    } catch (e) {
+      buildTimeEl.textContent = '開發環境';
+    }
+  }
+
   // 更改語音選項
   const voiceSelect = document.getElementById('tts-voice');
   voiceSelect.addEventListener('change', (e) => {
