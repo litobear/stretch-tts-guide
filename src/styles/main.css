@@ -305,7 +305,7 @@ p {
   transition: all var(--transition-fast);
 }
 
-.routine-card:hover .routine-start-btn {
+.routine-start-btn:hover {
   background-color: var(--accent-primary);
   color: var(--bg-primary);
 }
@@ -1423,4 +1423,23 @@ p {
   opacity: 0.8;
   z-index: 0;
   pointer-events: none;
+}
+
+.preview-step-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+.preview-step-item:last-child {
+  border-bottom: none;
+}
+.preview-step-name {
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+.preview-step-meta {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }

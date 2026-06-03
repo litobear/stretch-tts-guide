@@ -21,6 +21,7 @@ const modals = {
   import: document.getElementById('modal-import-routine'),
   share: document.getElementById('modal-share-routine'),
   aiImport: document.getElementById('modal-ai-import'),
+  preview: document.getElementById('modal-preview-routine'),
 };
 
 // 圓形計時環常數
@@ -183,14 +184,18 @@ function renderRoutinesList() {
     startBtn.className = 'routine-start-btn';
     startBtn.innerHTML =
       '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+    startBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      engine.startWorkout(routine);
+    });
     actions.appendChild(startBtn);
 
     footer.appendChild(actions);
     card.appendChild(footer);
 
-    // 點擊卡片開始運動
+    // 點擊卡片開啟預覽視窗
     card.addEventListener('click', () => {
-      engine.startWorkout(routine);
+      openPreviewModal(routine);
     });
 
     container.appendChild(card);
@@ -1044,6 +1049,106 @@ function resetCreateModalState() {
   }
 }
 
+// 開啟預覽視窗
+function openPreviewModal(routine) {
+  const titleEl = document.getElementById('preview-routine-title');
+  const metaEl = document.getElementById('preview-routine-meta');
+  const stepsEl = document.getElementById('preview-routine-steps');
+  const actionsLeftEl = document.getElementById('preview-routine-actions-left');
+  const startBtn = document.getElementById('btn-start-preview');
+
+  if (!titleEl || !metaEl || !stepsEl || !actionsLeftEl || !startBtn || !modals.preview) return;
+
+  titleEl.textContent = routine.name;
+
+  // 渲染 Meta
+  const totalSteps = routine.steps.reduce(
+    (sum, s) => sum + (s.repeat || 1) * (s.bilateral ? 2 : 1),
+    0
+  );
+  metaEl.innerHTML = `
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: ${routine.description ? '0.75rem' : '0'};">
+      <div class="routine-meta-item"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${escapeHTML(routine.durationText || calculateDurationText(routine))}</div>
+      <div class="routine-meta-item"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 4px;"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>${totalSteps} 個步驟</div>
+    </div>
+    ${routine.description ? `<p style="margin: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);">${escapeHTML(routine.description)}</p>` : ''}
+  `;
+
+  // 渲染步驟列表
+  stepsEl.innerHTML = '';
+  routine.steps.forEach((step, index) => {
+    const item = document.createElement('div');
+    item.className = 'preview-step-item';
+
+    let metaText = `${step.duration} 秒`;
+    if (step.repeat && step.repeat > 1) {
+      metaText += ` × ${step.repeat} 組`;
+    }
+    if (step.bilateral) {
+      metaText += ` (雙側)`;
+    }
+
+    item.innerHTML = `
+      <div class="preview-step-name">
+        <span style="color: var(--text-light); margin-right: 0.5rem; font-size: 0.85rem;">${index + 1}.</span>
+        ${escapeHTML(step.name)}
+      </div>
+      <div class="preview-step-meta">${metaText}</div>
+    `;
+    stepsEl.appendChild(item);
+  });
+
+  // 渲染快捷動作按鈕
+  actionsLeftEl.innerHTML = '';
+
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'icon-btn';
+  shareBtn.title = '分享此流程';
+  shareBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>';
+  shareBtn.addEventListener('click', () => {
+    modals.preview.classList.remove('active');
+    openShareModal(routine);
+  });
+  actionsLeftEl.appendChild(shareBtn);
+
+  if (routine.isCustom) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'icon-btn';
+    editBtn.title = '編輯此流程';
+    editBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+    editBtn.addEventListener('click', () => {
+      modals.preview.classList.remove('active');
+      openEditRoutineModal(routine);
+    });
+    actionsLeftEl.appendChild(editBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.title = '刪除此流程';
+    deleteBtn.style.color = 'var(--danger-color)';
+    deleteBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+    deleteBtn.addEventListener('click', () => {
+      modals.preview.classList.remove('active');
+      showConfirmDialog(`確定要刪除「${routine.name}」伸展流程嗎？`, () => {
+        stretches.deleteCustomRoutine(routine.id);
+        renderRoutinesList();
+      });
+    });
+    actionsLeftEl.appendChild(deleteBtn);
+  }
+
+  // 綁定開始運動
+  startBtn.onclick = () => {
+    modals.preview.classList.remove('active');
+    engine.startWorkout(routine);
+  };
+
+  modals.preview.classList.add('active');
+}
+
 // --- 彈出視窗事件設定 ---
 
 function setupModals() {
@@ -1055,6 +1160,7 @@ function setupModals() {
   const closeImportBtn = document.getElementById('btn-close-import-modal');
   const closeShareBtn = document.getElementById('btn-close-share-modal');
   const closeAiBtn = document.getElementById('btn-close-ai-modal');
+  const closePreviewBtn = document.getElementById('btn-close-preview');
 
   const cancelCreateBtn = document.getElementById('btn-cancel-create');
   const cancelImportBtn = document.getElementById('btn-cancel-import');
@@ -1089,6 +1195,7 @@ function setupModals() {
   closeImportBtn.addEventListener('click', hideModals);
   closeShareBtn.addEventListener('click', hideModals);
   if (closeAiBtn) closeAiBtn.addEventListener('click', hideModals);
+  if (closePreviewBtn) closePreviewBtn.addEventListener('click', hideModals);
 
   cancelCreateBtn.addEventListener('click', handleCancelCreate);
   cancelImportBtn.addEventListener('click', hideModals);
