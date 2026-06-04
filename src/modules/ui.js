@@ -62,7 +62,9 @@ function setupModalScrollLock() {
   });
 
   const config = { attributes: true, attributeFilter: ['class'] };
-  document.querySelectorAll('.modal-overlay, .drawer').forEach(el => observer.observe(el, config));
+  document
+    .querySelectorAll('.modal-overlay, .drawer')
+    .forEach((el) => observer.observe(el, config));
 }
 
 // 初始化 UI
@@ -358,7 +360,17 @@ function handleEngineStateChange(state, details) {
     state !== engine.States.EXPLANATION
   ) {
     if (setIndicator) setIndicator.style.display = 'flex';
-    if (setCurrent) setCurrent.textContent = details.step.set;
+
+    let displaySet = details.step.set;
+    // 如果正在休息，且有上一個步驟，維持顯示剛做完的組數
+    if (state === engine.States.REST && details.stepIndex > 0) {
+      const prevStep = details.routine.steps[details.stepIndex - 1];
+      if (prevStep && prevStep.parentId === details.step.parentId) {
+        displaySet = prevStep.set;
+      }
+    }
+
+    if (setCurrent) setCurrent.textContent = displaySet;
     if (setTotal) setTotal.textContent = details.step.totalSets;
   } else {
     if (setIndicator) setIndicator.style.display = 'none';
