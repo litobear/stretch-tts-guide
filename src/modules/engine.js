@@ -16,7 +16,8 @@ let currentRoutine = null;
 let currentStepIndex = -1;
 let timeRemaining = 0;
 let stepDuration = 0;
-let totalTimeElapsed = 0;
+let accumulatedTimeMs = 0;
+let lastResumeTimeMs = 0;
 
 let timerInterval = null;
 let breathingState = 'inhale'; // 'inhale', 'exhale', 'prepare', 'rest'
@@ -66,7 +67,10 @@ export function getStepIndex() {
 }
 
 export function getTotalTimeElapsed() {
-  return totalTimeElapsed;
+  if (state !== States.IDLE && state !== States.COMPLETED && lastResumeTimeMs > 0) {
+    return Math.floor((accumulatedTimeMs + (Date.now() - lastResumeTimeMs)) / 1000);
+  }
+  return Math.floor(accumulatedTimeMs / 1000);
 }
 
 // Helper: Swap "左" and "右" in a string
@@ -185,7 +189,8 @@ export function startWorkout(routine) {
     steps: flattenedSteps,
   };
   currentStepIndex = 0;
-  totalTimeElapsed = 0;
+  accumulatedTimeMs = 0;
+  lastResumeTimeMs = Date.now();
 
   transitionTo(States.PREPARE);
 }
@@ -193,6 +198,11 @@ export function startWorkout(routine) {
 // Pause workout
 export function pauseWorkout() {
   if (state === States.IDLE || state === States.COMPLETED) return;
+
+  if (lastResumeTimeMs > 0) {
+    accumulatedTimeMs += (Date.now() - lastResumeTimeMs);
+    lastResumeTimeMs = 0;
+  }
 
   clearInterval(timerInterval);
   timerInterval = null;
@@ -204,6 +214,10 @@ export function pauseWorkout() {
 export function resumeWorkout() {
   if (state === States.IDLE || state === States.COMPLETED) return;
   if (timerInterval) return; // already running
+
+  if (lastResumeTimeMs === 0) {
+    lastResumeTimeMs = Date.now();
+  }
 
   tts.resumeSpeaking();
   if (!isWaitingForTTS) {
@@ -221,7 +235,8 @@ export function stopWorkout() {
   currentStepIndex = -1;
   timeRemaining = 0;
   stepDuration = 0;
-  totalTimeElapsed = 0;
+  accumulatedTimeMs = 0;
+  lastResumeTimeMs = 0;
   breathingState = 'prepare';
 
   tts.stopSpeaking();
@@ -403,6 +418,10 @@ function transitionTo(newState) {
       }
     });
   } else if (state === States.COMPLETED) {
+    if (lastResumeTimeMs > 0) {
+      accumulatedTimeMs += (Date.now() - lastResumeTimeMs);
+      lastResumeTimeMs = 0;
+    }
     // Workout finished!
     tts.playChime(880.0, 'sine', 0.8); // A5 chime
     setTimeout(() => {
@@ -413,7 +432,7 @@ function transitionTo(newState) {
 
     if (callbacks.onComplete) {
       callbacks.onComplete({
-        totalTime: totalTimeElapsed,
+        totalTime: getTotalTimeElapsed(),
         stepCount: currentRoutine.steps.length,
       });
     }
@@ -472,8 +491,6 @@ function tick() {
   }
 
   if (state === States.STRETCHING) {
-    totalTimeElapsed++;
-
     // Process breathing cycle
     updateBreathingCycle();
 
