@@ -85,6 +85,40 @@ export function startWorkout(routine) {
   // Flatten routine steps based on repeats and bilateral sides
   const flattenedSteps = [];
   routine.steps.forEach((step) => {
+    // 1. 動態計算當前步驟的 instructions 與 ttsCues
+    const descLines = (step.description || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    let finalInstructions = [];
+    if (descLines.length > 0) {
+      finalInstructions.push(...descLines);
+    } else {
+      finalInstructions.push(`請做好準備，調整成適合「${step.name}」的舒適姿勢。`);
+    }
+
+    const ttsText = descLines.length > 0 ? descLines.join('，') : finalInstructions[0];
+    let finalTtsCues = [{ time: 0, text: `${step.name}。${ttsText}` }];
+
+    // 加入動態的呼吸語音提示
+    if (step.duration >= 60) {
+      finalTtsCues.push({ time: Math.floor(step.duration / 4), text: `保持呼吸。` });
+      finalTtsCues.push({
+        time: Math.floor(step.duration / 2),
+        text: `時間過半，請保持深長呼吸。`,
+      });
+      finalTtsCues.push({ time: Math.floor((step.duration * 3) / 4), text: `保持呼吸。` });
+    } else if (step.duration >= 15) {
+      finalTtsCues.push({
+        time: Math.floor(step.duration / 2),
+        text: `時間過半，請保持深長呼吸。`,
+      });
+    }
+
+    // 依照時間戳記排序確保順序正確
+    finalTtsCues.sort((a, b) => a.time - b.time);
+
     const repeat = step.repeat || 1;
     const bilateral = step.bilateral || false;
 
@@ -117,36 +151,31 @@ export function startWorkout(routine) {
         set: exec.set,
         totalSets: exec.totalSets,
         side: exec.side,
-        instructions: Array.isArray(step.instructions)
-          ? step.instructions.map((ins) => {
-              let newIns = exec.isOpposite ? swapLeftRight(ins) : ins;
-              if (newIns.includes(step.name)) {
-                newIns = newIns.replace(step.name, name);
-              } else if (exec.isOpposite && newIns.includes(baseName)) {
-                newIns = newIns.replace(baseName, name);
-              }
-              return newIns;
-            })
-          : step.instructions,
-        ttsCues: Array.isArray(step.ttsCues)
-          ? step.ttsCues.map((cue) => {
-              let newText = exec.isOpposite ? swapLeftRight(cue.text) : cue.text;
-              if (cue.time === 0) {
-                if (newText.includes(step.name)) {
-                  newText = newText.replace(step.name, ttsName);
-                } else if (exec.isOpposite && newText.includes(baseName)) {
-                  newText = newText.replace(baseName, ttsName);
-                } else {
-                  newText = `${ttsName}。` + newText;
-                }
-
-                // Remove legacy "下一個動作是：" prefixes dynamically for backward compatibility
-                newText = newText.replace(/下一個動作[是，：]*\s*/g, '');
-              }
-              return { ...cue, text: newText };
-            })
-          : [{ time: 0, text: `${ttsName}。` }],
+        instructions: finalInstructions.map((ins) => {
+          let newIns = exec.isOpposite ? swapLeftRight(ins) : ins;
+          if (newIns.includes(step.name)) {
+            newIns = newIns.replace(step.name, name);
+          } else if (exec.isOpposite && newIns.includes(baseName)) {
+            newIns = newIns.replace(baseName, name);
+          }
+          return newIns;
+        }),
+        ttsCues: finalTtsCues.map((cue) => {
+          let newText = exec.isOpposite ? swapLeftRight(cue.text) : cue.text;
+          if (cue.time === 0) {
+            if (newText.includes(step.name)) {
+              newText = newText.replace(step.name, ttsName);
+            } else if (exec.isOpposite && newText.includes(baseName)) {
+              newText = newText.replace(baseName, ttsName);
+            } else {
+              newText = `${ttsName}。` + newText;
+            }
+            newText = newText.replace(/下一個動作[是，：]*\s*/g, '');
+          }
+          return { ...cue, text: newText };
+        }),
       };
+
       flattenedSteps.push(clonedStep);
     });
   });
@@ -453,25 +482,10 @@ function tick() {
     if (currentStep) {
       const elapsed = currentStep.duration - timeRemaining;
 
-      // Look for matches in the cue script list
+      // Look for matches in the dynamically computed cue script list
       const cue = currentStep.ttsCues && currentStep.ttsCues.find((c) => c.time === elapsed);
       if (cue) {
         tts.speak(cue.text);
-      } else {
-        // 動態補充語音提示（針對沒有自帶提示的舊有流程或內建流程）
-        if (currentStep.duration >= 60) {
-          if (elapsed === Math.floor(currentStep.duration / 4)) {
-            tts.speak('保持呼吸。');
-          } else if (elapsed === Math.floor((currentStep.duration * 3) / 4)) {
-            tts.speak('保持呼吸。');
-          } else if (elapsed === Math.floor(currentStep.duration / 2)) {
-            tts.speak('時間過半，請保持深長呼吸。');
-          }
-        } else if (currentStep.duration >= 15) {
-          if (elapsed === Math.floor(currentStep.duration / 2)) {
-            tts.speak('時間過半，請保持深長呼吸。');
-          }
-        }
       }
     }
   }

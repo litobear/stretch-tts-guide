@@ -1450,41 +1450,6 @@ function setupRoutineCreator() {
       const stepDesc = item.querySelector('.stretch-desc').value.trim();
       const animationType = 'default';
 
-      // 支援多行動作說明，以換行分割
-      const stepDescLines = stepDesc
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-      // 自動生成中文說明
-      const instructions = [];
-      if (stepDescLines.length > 0) {
-        instructions.push(...stepDescLines);
-      } else {
-        instructions.push(`請做好準備，調整成適合「${name}」的舒適姿勢。`);
-      }
-
-      // 自動生成語音播報內容，將多行以逗號連接
-      const ttsText =
-        stepDescLines.length > 0
-          ? stepDescLines.join('，')
-          : `請做好準備，調整成適合「${name}」的舒適姿勢。`;
-
-      // 自動生成繁體中文語音播報 timeline
-      const ttsCues = [{ time: 0, text: `${name}。${ttsText}` }];
-
-      if (duration >= 60) {
-        const q1 = Math.floor(duration / 4);
-        const q2 = Math.floor(duration / 2);
-        const q3 = Math.floor((duration * 3) / 4);
-        ttsCues.push({ time: q1, text: `保持呼吸。` });
-        ttsCues.push({ time: q2, text: `時間過半，請保持深長呼吸。` });
-        ttsCues.push({ time: q3, text: `保持呼吸。` });
-      } else if (duration >= 15) {
-        const midpoint = Math.floor(duration / 2);
-        ttsCues.push({ time: midpoint, text: `時間過半，請保持深長呼吸。` });
-      }
-
       steps.push({
         id: `step-${index}-${Date.now()}`,
         name,
@@ -1493,8 +1458,6 @@ function setupRoutineCreator() {
         bilateral,
         description: stepDesc,
         animationType,
-        instructions,
-        ttsCues,
       });
     });
 
@@ -1624,8 +1587,6 @@ function openShareModal(routine) {
       s.bilateral, // 3
       s.description, // 4
       s.animationType, // 5
-      s.instructions, // 6
-      s.ttsCues.map((c) => [c.time, c.text]), // 7
     ]),
   };
 
@@ -1703,8 +1664,6 @@ function handleSharedUrlImport() {
         bilateral: s[3],
         description: s[4],
         animationType: s[5],
-        instructions: s[6],
-        ttsCues: s[7] ? s[7].map((c) => ({ time: c[0], text: c[1] })) : [],
       })),
     };
 
