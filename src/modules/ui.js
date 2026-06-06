@@ -3,7 +3,6 @@ import * as stretches from './stretches.js';
 import * as engine from './engine.js';
 import * as tts from './tts.js';
 import * as history from './history.js';
-import { getAnimationSVG } from './animations.js';
 import { signIn, signOut, onAuthChange, syncFromCloud } from './firebase.js';
 import LZString from 'lz-string';
 
@@ -337,10 +336,9 @@ function handleEngineStateChange(state, details) {
   if (stepIndicatorEl)
     stepIndicatorEl.textContent = `第 ${details.stepIndex + 1} / ${details.routine.steps.length} 步`;
 
-  // 取得動作詳細資料與 SVG
+  // 取得動作詳細資料
   const stretchNameEl = document.getElementById('current-stretch-name');
   const instructionsContainer = document.getElementById('current-stretch-instructions');
-  const animationContainer = document.getElementById('animation-container');
 
   // 切換播放/暫停按鈕圖示
   togglePlayPauseIcon(true);
@@ -385,9 +383,6 @@ function handleEngineStateChange(state, details) {
         <p>請確保您的裝置已開啟音量以聽到語音指引。</p>
       `;
     }
-    if (animationContainer) {
-      animationContainer.innerHTML = getAnimationSVG('default');
-    }
 
     document.getElementById('timer-state-label').textContent = '準備';
   } else if (state === engine.States.EXPLANATION) {
@@ -398,9 +393,6 @@ function handleEngineStateChange(state, details) {
         .map((inst) => `<li>${escapeHTML(inst)}</li>`)
         .join('');
       instructionsContainer.innerHTML = `<ol>${listItems}</ol>`;
-    }
-    if (animationContainer) {
-      animationContainer.innerHTML = getAnimationSVG(details.step.animationType);
     }
 
     document.getElementById('timer-state-label').textContent = '解說';
@@ -415,9 +407,6 @@ function handleEngineStateChange(state, details) {
         .map((inst) => `<li>${escapeHTML(inst)}</li>`)
         .join('');
       instructionsContainer.innerHTML = `<ol>${listItems}</ol>`;
-    }
-    if (animationContainer) {
-      animationContainer.innerHTML = getAnimationSVG(details.step.animationType);
     }
 
     document.getElementById('timer-state-label').textContent = '伸展';
@@ -1448,7 +1437,6 @@ function setupRoutineCreator() {
       const repeat = parseInt(item.querySelector('.stretch-repeat').value || '1');
       const bilateral = item.querySelector('.stretch-bilateral').checked;
       const stepDesc = item.querySelector('.stretch-desc').value.trim();
-      const animationType = 'default';
 
       steps.push({
         id: `step-${index}-${Date.now()}`,
@@ -1457,7 +1445,6 @@ function setupRoutineCreator() {
         repeat,
         bilateral,
         description: stepDesc,
-        animationType,
       });
     });
 
@@ -1586,7 +1573,6 @@ function openShareModal(routine) {
       s.repeat, // 2
       s.bilateral, // 3
       s.description, // 4
-      s.animationType, // 5
     ]),
   };
 
@@ -1663,7 +1649,6 @@ function handleSharedUrlImport() {
         repeat: s[2],
         bilateral: s[3],
         description: s[4],
-        animationType: s[5],
       })),
     };
 

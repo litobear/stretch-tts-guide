@@ -12,7 +12,6 @@ export const DEFAULT_ROUTINES = [
         id: 'neck-tilt',
         name: '頸部側向伸展',
         duration: 20,
-        animationType: 'neck-tilt',
         description:
           '坐正或站直，雙肩自然放鬆下沉。\n慢慢將右耳向右肩膀靠近。\n停留 10 秒鐘，接著換左側伸展。\n請勿過度拉扯，讓頭部的重量自然垂下即可。',
       },
@@ -20,7 +19,6 @@ export const DEFAULT_ROUTINES = [
         id: 'shoulder-roll',
         name: '肩部繞環',
         duration: 20,
-        animationType: 'shoulder-roll',
         description:
           '吸氣，將雙肩向上抬起移向耳朵。\n吐氣，將雙肩向後向下滾動放鬆。\n保持緩慢且順暢的圓周繞環動作。\n時間過半時換方向繞環。',
       },
@@ -28,7 +26,6 @@ export const DEFAULT_ROUTINES = [
         id: 'chest-opener',
         name: '站立擴胸伸展',
         duration: 30,
-        animationType: 'chest-opener',
         description:
           '將雙手置於背後，十指互扣。\n雙臂微微伸直，慢慢向後拉並將胸口提起。\n如果頸部感到舒適，可微微仰頭看向斜上方。\n保持深長呼吸，感覺呼吸擴張您的胸腔。',
       },
@@ -36,7 +33,6 @@ export const DEFAULT_ROUTINES = [
         id: 'side-stretch',
         name: '站立體側伸展',
         duration: 30,
-        animationType: 'side-stretch',
         description:
           '將右手臂高舉過頭伸直。\n上半身徐徐向左側傾斜，延展身體右側。\n停留 15 秒後，換左側體側伸展。\n雙腳踩穩地面，重心平均分布在兩腳上。',
       },
@@ -44,7 +40,6 @@ export const DEFAULT_ROUTINES = [
         id: 'forward-fold',
         name: '站立前彎伸展',
         duration: 30,
-        animationType: 'forward-fold',
         description:
           '雙腳打開與髖同寬站立，膝蓋微彎保持彈性。\n從髖部開始慢慢向前折疊，讓上半身如瀑布般自然垂下。\n讓頭部與雙臂完全放鬆，沉向地面。\n將呼吸帶到大腿後側以及整個下背部。',
       },
@@ -62,7 +57,6 @@ export const DEFAULT_ROUTINES = [
         id: 'chest-opener',
         name: '溫和開背',
         duration: 30,
-        animationType: 'chest-opener',
         description:
           '採取舒適的坐姿，雙手輕放在膝蓋上。\n吸氣，將胸口向前托出並向上提。\n吐氣，讓背部回歸中立並放鬆。配合呼吸反覆緩慢進行。',
       },
@@ -70,7 +64,6 @@ export const DEFAULT_ROUTINES = [
         id: 'forward-fold',
         name: '坐姿前彎伸展',
         duration: 45,
-        animationType: 'forward-fold',
         description:
           '將雙腿舒適盤坐或向前伸直。\n雙手徐徐向前走，讓脊椎自然微微拱起折疊。\n低頭讓下巴靠近胸口，徹底放鬆後頸。\n專注在每一次長且緩慢的呼氣上。',
       },
@@ -78,7 +71,6 @@ export const DEFAULT_ROUTINES = [
         id: 'neck-tilt',
         name: '正念頸部拉伸',
         duration: 30,
-        animationType: 'neck-tilt',
         description:
           '脊椎挺直，雙肩放鬆下沉。\n頭部向右傾斜，緩慢吸吐 15 秒。\n接著將頭部換向左傾斜 15 秒。',
       },
