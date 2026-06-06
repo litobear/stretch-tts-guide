@@ -50,31 +50,35 @@ export function resetCreateModalState() {
       <span class="drag-handle"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="pointer-events: none;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></span>
       <div class="form-inputs-container">
         <!-- 第一行：動作名稱 -->
-        <div class="form-inputs-row">
+        <div class="form-inputs-row builder-item-header">
           <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
+          <button type="button" class="routine-action-btn toggle-collapse-btn" title="展開/收合"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
         </div>
-        <!-- 第二行：秒數、組數、雙側 -->
-        <div class="form-inputs-row details-row">
-          <div class="input-unit-wrapper">
-            <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
-            <span class="input-unit-label">秒</span>
+        <div class="collapsible-details">
+          <!-- 第二行：秒數、組數、雙側 -->
+          <div class="form-inputs-row details-row">
+            <div class="input-unit-wrapper">
+              <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
+              <span class="input-unit-label">秒</span>
+            </div>
+            <div class="input-unit-wrapper">
+              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
+              <span class="input-unit-label">組</span>
+            </div>
+            <label class="checkbox-label stretch-bilateral-label">
+              <input type="checkbox" class="stretch-bilateral"> 雙側
+            </label>
           </div>
-          <div class="input-unit-wrapper">
-            <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
-            <span class="input-unit-label">組</span>
+          <!-- 第三行：動作說明 -->
+          <div class="form-inputs-row description-row">
+            <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
           </div>
-          <label class="checkbox-label stretch-bilateral-label">
-            <input type="checkbox" class="stretch-bilateral"> 雙側
-          </label>
-        </div>
-        <!-- 第三行：動作說明 -->
-        <div class="form-inputs-row description-row">
-          <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
         </div>
       </div>
       <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     `;
     item.querySelector('.remove-step-btn').addEventListener('click', () => item.remove());
+    item.querySelector('.toggle-collapse-btn').addEventListener('click', () => item.classList.toggle('collapsed'));
     list.appendChild(item);
     makeItemDraggable(item);
   }
@@ -98,36 +102,40 @@ export function openEditRoutineModal(routine) {
     list.innerHTML = '';
     routine.steps.forEach((step) => {
       const item = document.createElement('div');
-      item.className = 'builder-stretch-item';
+      item.className = 'builder-stretch-item collapsed';
       item.innerHTML = `
         <span class="drag-handle"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="pointer-events: none;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></span>
         <div class="form-inputs-container">
           <!-- 第一行：動作名稱 -->
-          <div class="form-inputs-row">
+          <div class="form-inputs-row builder-item-header">
             <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)" value="${escapeHTML(step.name)}">
+            <button type="button" class="routine-action-btn toggle-collapse-btn" title="展開/收合"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
           </div>
-          <!-- 第二行：秒數、組數、雙側 -->
-          <div class="form-inputs-row details-row">
-            <div class="input-unit-wrapper">
-              <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="${step.duration}">
-              <span class="input-unit-label">秒</span>
+          <div class="collapsible-details">
+            <!-- 第二行：秒數、組數、雙側 -->
+            <div class="form-inputs-row details-row">
+              <div class="input-unit-wrapper">
+                <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="${step.duration}">
+                <span class="input-unit-label">秒</span>
+              </div>
+              <div class="input-unit-wrapper">
+                <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="${step.repeat || 1}">
+                <span class="input-unit-label">組</span>
+              </div>
+              <label class="checkbox-label stretch-bilateral-label">
+                <input type="checkbox" class="stretch-bilateral" ${step.bilateral ? 'checked' : ''}> 雙側
+              </label>
             </div>
-            <div class="input-unit-wrapper">
-              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="${step.repeat || 1}">
-              <span class="input-unit-label">組</span>
+            <!-- 第三行：動作說明 -->
+            <div class="form-inputs-row description-row">
+              <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2">${escapeHTML(step.description || '')}</textarea>
             </div>
-            <label class="checkbox-label stretch-bilateral-label">
-              <input type="checkbox" class="stretch-bilateral" ${step.bilateral ? 'checked' : ''}> 雙側
-            </label>
-          </div>
-          <!-- 第三行：動作說明 -->
-          <div class="form-inputs-row description-row">
-            <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2">${escapeHTML(step.description || '')}</textarea>
           </div>
         </div>
         <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       `;
       item.querySelector('.remove-step-btn').addEventListener('click', () => item.remove());
+      item.querySelector('.toggle-collapse-btn').addEventListener('click', () => item.classList.toggle('collapsed'));
       list.appendChild(item);
       makeItemDraggable(item);
     });
@@ -167,26 +175,29 @@ export function setupRoutineCreator() {
       <span class="drag-handle"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="pointer-events: none;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></span>
       <div class="form-inputs-container">
         <!-- 第一行：動作名稱 -->
-        <div class="form-inputs-row">
+        <div class="form-inputs-row builder-item-header">
           <input type="text" class="input-text-field stretch-name" required placeholder="動作名稱 (如: 轉腰拉伸)">
+          <button type="button" class="routine-action-btn toggle-collapse-btn" title="展開/收合"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
         </div>
-        <!-- 第二行：秒數、組數、雙側 -->
-        <div class="form-inputs-row details-row">
-          <div class="input-unit-wrapper">
-            <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
-            <span class="input-unit-label">秒</span>
+        <div class="collapsible-details">
+          <!-- 第二行：秒數、組數、雙側 -->
+          <div class="form-inputs-row details-row">
+            <div class="input-unit-wrapper">
+              <input type="number" class="input-text-field stretch-duration" required placeholder="秒數" min="5" max="300" value="20">
+              <span class="input-unit-label">秒</span>
+            </div>
+            <div class="input-unit-wrapper">
+              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
+              <span class="input-unit-label">組</span>
+            </div>
+            <label class="checkbox-label stretch-bilateral-label">
+              <input type="checkbox" class="stretch-bilateral"> 雙側
+            </label>
           </div>
-          <div class="input-unit-wrapper">
-            <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
-            <span class="input-unit-label">組</span>
+          <!-- 第三行：動作說明 -->
+          <div class="form-inputs-row description-row">
+            <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
           </div>
-          <label class="checkbox-label stretch-bilateral-label">
-            <input type="checkbox" class="stretch-bilateral"> 雙側
-          </label>
-        </div>
-        <!-- 第三行：動作說明 -->
-        <div class="form-inputs-row description-row">
-          <textarea class="input-textarea-field stretch-desc" placeholder="動作說明 (選填，可分行輸入多個指引)" rows="2"></textarea>
         </div>
       </div>
       <button type="button" class="routine-action-btn remove-step-btn" title="移除動作" style="color: var(--danger-color);"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -194,6 +205,9 @@ export function setupRoutineCreator() {
 
     item.querySelector('.remove-step-btn').addEventListener('click', () => {
       item.remove();
+    });
+    item.querySelector('.toggle-collapse-btn').addEventListener('click', () => {
+      item.classList.toggle('collapsed');
     });
 
     list.appendChild(item);

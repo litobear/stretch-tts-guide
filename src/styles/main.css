@@ -1147,6 +1147,30 @@ body.modal-open {
   width: 100%;
 }
 
+.builder-stretch-item .builder-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.builder-stretch-item .collapsible-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.builder-stretch-item.collapsed .collapsible-details {
+  display: none;
+}
+
+.builder-stretch-item .toggle-collapse-btn {
+  transition: transform var(--transition-fast);
+}
+
+.builder-stretch-item.collapsed .toggle-collapse-btn {
+  transform: rotate(-90deg);
+}
+
 .builder-stretch-item .details-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
