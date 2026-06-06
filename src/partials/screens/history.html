@@ -1,0 +1,76 @@
+<section id="screen-history" class="app-screen">
+  <div class="history-container" style="max-width: 600px; margin: 0 auto; width: 100%">
+    <div
+      class="routines-header"
+      style="
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      "
+    >
+      <h3>運動紀錄</h3>
+      <button id="btn-history-back" class="btn btn-secondary btn-sm">返回</button>
+    </div>
+
+    <!-- Calendar Section -->
+    <div
+      class="calendar-wrapper card fade-in"
+      style="margin: 0 auto 2rem auto; padding: 1.5rem; max-width: 420px"
+    >
+      <div
+        class="calendar-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        "
+      >
+        <button
+          id="btn-cal-prev"
+          class="icon-btn"
+          aria-label="上個月"
+          style="min-height: auto; padding: 0.5rem"
+        >
+          ◀
+        </button>
+        <h4 id="calendar-month-year" style="margin: 0; font-size: 1.1rem"></h4>
+        <button
+          id="btn-cal-next"
+          class="icon-btn"
+          aria-label="下個月"
+          style="min-height: auto; padding: 0.5rem"
+        >
+          ▶
+        </button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid">
+        <!-- Dynamically populated via JS -->
+      </div>
+    </div>
+
+    <div
+      id="history-list-header"
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      "
+    >
+      <h4 style="margin: 0" id="history-list-title">所有紀錄</h4>
+      <button
+        id="btn-clear-date-filter"
+        class="btn btn-secondary btn-sm"
+        style="display: none"
+      >
+        顯示全部
+      </button>
+    </div>
+    <div id="history-list" class="history-list">
+      <!-- Dynamically populated via JS -->
+      <div class="loading-placeholder">暫無紀錄</div>
+    </div>
+  </div>
+</section>

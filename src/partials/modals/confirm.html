@@ -1,0 +1,26 @@
+<div id="modal-confirm" class="modal-overlay">
+  <div class="modal-content card" style="max-width: 400px; text-align: center">
+    <div class="modal-body" style="padding-top: 2rem">
+      <h3 id="modal-confirm-title" style="margin-bottom: 1rem">確認</h3>
+      <p id="modal-confirm-message" style="color: var(--text-secondary); margin-bottom: 2rem">
+        您確定要執行此操作嗎？
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center">
+        <button id="btn-confirm-cancel" class="btn btn-secondary" style="flex: 1">
+          取消
+        </button>
+        <button
+          id="btn-confirm-ok"
+          class="btn btn-primary"
+          style="
+            flex: 1;
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+          "
+        >
+          確定
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div id="modal-ai-import" class="modal-overlay">
+  <div class="modal-content card" style="max-width: 600px">
+    <div class="modal-header">
+      <h3>透過 AI 建立流程</h3>
+      <button id="btn-close-ai-modal" class="icon-btn" aria-label="關閉視窗">
+        <svg
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="none"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" style="text-align: left">
+      <p style="margin-bottom: 8px">
+        1. 點擊按鈕複製這段提示詞 (Prompt)，並貼上給您的 AI (如 ChatGPT、Claude)。
+      </p>
+      <div class="code-snippet-container" style="position: relative; margin-bottom: 15px">
+        <pre
+          id="ai-prompt-text"
+          style="
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            border: 1px solid var(--border-color);
+          "
+        >
+請幫我設計一套伸展運動菜單。
+請直接輸出 JSON 格式，不要包含 Markdown 標籤或其他文字解說。
+請依照以下格式：
+{
+  "name": "菜單名稱",
+  "description": "菜單整體描述 (如果有需要準備的道具，請寫在這裡)",
+  "steps": [
+    {
+      "name": "動作名稱",
+      "duration": 秒數(單次動作要持續的時間, 整數),
+      "repeat": 組數(動作要重複的次數, 整數),
+      "bilateral": 是否為單側動作需要換邊(布林值, 若為 true，請統一以右側來撰寫動作名稱與解說，系統會自動產生換左側的流程),
+      "description": "動作解說(可選，請用引導並簡短的語氣，請在適當的地方使用 \n 換行)"
+    }
+  ]
+}</pre>
+        <button
+          id="btn-copy-ai-prompt"
+          class="btn btn-secondary"
+          style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+          "
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          複製
+        </button>
+      </div>
+
+      <p style="margin-bottom: 8px">2. 將 AI 產生的 JSON 貼在下方，並點擊「匯入並編輯」。</p>
+      <textarea
+        id="ai-json-input"
+        class="input-textarea-field"
+        rows="6"
+        placeholder="貼上 AI 產生的 JSON..."
+        style="font-family: monospace"
+      ></textarea>
+
+      <div class="modal-actions" style="margin-top: 20px; justify-content: flex-end">
+        <button id="btn-cancel-ai-import" class="btn btn-secondary">取消</button>
+        <button id="btn-submit-ai-import" class="btn btn-primary">
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          匯入並編輯
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

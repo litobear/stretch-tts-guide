@@ -1,0 +1,39 @@
+<div id="modal-share-routine" class="modal-overlay">
+  <div class="modal-content card">
+    <div class="modal-header">
+      <h3>分享伸展流程</h3>
+      <button id="btn-close-share-modal" class="icon-btn" aria-label="關閉視窗">
+        <svg
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="none"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body align-center">
+      <p>使用其他裝置掃描下方 QR Code，或者複製分享連結。</p>
+
+      <div id="share-qr-container" class="qr-container">
+        <!-- QR code will be dynamically generated as SVG/canvas here -->
+        <div id="qr-loading">正在產生 QR Code...</div>
+      </div>
+
+      <div class="form-group">
+        <label for="share-url-input">分享連結</label>
+        <div class="input-with-button">
+          <input type="text" id="share-url-input" readonly class="input-text-field" />
+          <button id="btn-copy-share-url" class="btn btn-primary">複製</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="btn-close-share" class="btn btn-secondary">關閉</button>
+    </div>
+  </div>
+</div>
