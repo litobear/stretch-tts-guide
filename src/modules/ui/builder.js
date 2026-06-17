@@ -62,7 +62,7 @@ export function resetCreateModalState() {
               <span class="input-unit-label">秒</span>
             </div>
             <div class="input-unit-wrapper">
-              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
+              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="20" value="1">
               <span class="input-unit-label">組</span>
             </div>
             <label class="checkbox-label stretch-bilateral-label">
@@ -119,7 +119,7 @@ export function openEditRoutineModal(routine) {
                 <span class="input-unit-label">秒</span>
               </div>
               <div class="input-unit-wrapper">
-                <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="${step.repeat || 1}">
+                <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="20" value="${step.repeat || 1}">
                 <span class="input-unit-label">組</span>
               </div>
               <label class="checkbox-label stretch-bilateral-label">
@@ -187,7 +187,7 @@ export function setupRoutineCreator() {
               <span class="input-unit-label">秒</span>
             </div>
             <div class="input-unit-wrapper">
-              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="10" value="1">
+              <input type="number" class="input-text-field stretch-repeat" required placeholder="組數" min="1" max="20" value="1">
               <span class="input-unit-label">組</span>
             </div>
             <label class="checkbox-label stretch-bilateral-label">
